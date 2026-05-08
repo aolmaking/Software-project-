@@ -1,1 +1,291 @@
-<!-- frontend/cart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+        }
+
+        .cart-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .cart-items {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-items h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #2c3e50;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .item-quantity input {
+            width: 50px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .cart-summary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .summary-item.total {
+            border-top: 2px solid #2c3e50;
+            padding-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #27ae60;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .checkout-btn:hover {
+            background-color: #229954;
+        }
+
+        .continue-shopping-btn {
+            width: 100%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .continue-shopping-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .empty-cart p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛒 Shopping Cart</h1>
+    </header>
+
+    <div class="container">
+        <div class="cart-content">
+            <!-- Cart Items Section -->
+            <div class="cart-items">
+                <h2>Items in Your Cart</h2>
+                
+                <div id="cartItemsContainer">
+                    <!-- Cart items will be dynamically inserted here -->
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <div class="item-name">Sample Product 1</div>
+                            <div class="item-price">$25.99</div>
+                            <div class="item-quantity">
+                                <label>Qty:</label>
+                                <input type="number" value="1" min="1">
+                            </div>
+                        </div>
+                        <button class="remove-btn">Remove</button>
+                    </div>
+
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <div class="item-name">Sample Product 2</div>
+                            <div class="item-price">$45.50</div>
+                            <div class="item-quantity">
+                                <label>Qty:</label>
+                                <input type="number" value="2" min="1">
+                            </div>
+                        </div>
+                        <button class="remove-btn">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Summary Section -->
+            <div class="cart-summary">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">Order Summary</h2>
+                
+                <div class="summary-item">
+                    <span>Subtotal:</span>
+                    <span>$116.98</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tax (10%):</span>
+                    <span>$11.70</span>
+                </div>
+                <div class="summary-item">
+                    <span>Shipping:</span>
+                    <span>$5.00</span>
+                </div>
+                
+                <div class="summary-item total">
+                    <span>Total:</span>
+                    <span>$133.68</span>
+                </div>
+
+                <button class="checkout-btn">Proceed to Checkout</button>
+                <button class="continue-shopping-btn">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple event listeners for remove buttons
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.cart-item').remove();
+                alert('Item removed from cart');
+            });
+        });
+
+        // Update total when quantity changes
+        document.querySelectorAll('.item-quantity input').forEach(input => {
+            input.addEventListener('change', function() {
+                console.log('Quantity updated to: ' + this.value);
+                // Call function to update cart totals
+            });
+        });
+
+        // Checkout button
+        document.querySelector('.checkout-btn').addEventListener('click', function() {
+            alert('Proceeding to checkout...');
+            // Redirect to checkout page
+        });
+
+        // Continue shopping button
+        document.querySelector('.continue-shopping-btn').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+</body>
+</html>

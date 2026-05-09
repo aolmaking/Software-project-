@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
     quantity INTEGER NOT NULL CHECK (quantity >= 1 AND quantity <= 20),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (item_public_id) REFERENCES items(public_id),
+    FOREIGN KEY (item_public_id) REFERENCES items(public_id) ON DELETE RESTRICT,
     UNIQUE(session_id, item_public_id)
 );
 

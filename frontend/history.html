@@ -1,0 +1,52 @@
+<!-- Order History Page (Member 4) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History — Brew & Bake</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Brew & Bake</div>
+        <div class="navbar-menu">
+            <a href="index.html">Menu</a>
+            <a href="cart.html">Cart</a>
+            <div id="auth-state" class="auth-state">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="register.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Order History</h1>
+        
+        <div id="no-orders" class="no-orders">
+            <p>You haven't placed any orders yet.</p>
+            <a href="index.html" class="btn-primary">Start Shopping</a>
+        </div>
+
+        <div id="orders-list" class="orders-list"></div>
+
+        <!-- Pagination Controls -->
+        <div id="pagination" class="pagination"></div>
+    </main>
+
+    <!-- Order Detail Modal -->
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 id="modal-order-id">Order Details</h2>
+            <div id="modal-body" class="modal-body">
+                <!-- Order details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/history.js"></script>
+</body>
+</html>

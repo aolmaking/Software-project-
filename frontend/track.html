@@ -1,1 +1,55 @@
-<!-- frontend/track.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - Coffee System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/track.css">
+</head>
+<body>
+    <div class="tracking-container" id="tracking-container">
+        <div class="header">
+            <h1 id="order-title">Order #---</h1>
+        </div>
+        
+        <div class="status-section">
+            <h2 id="status-message">Loading your order...</h2>
+            <p id="error-message" class="error-text" style="display: none;"></p>
+        </div>
+
+        <div class="progress-wrapper">
+            <div class="progress-line-container">
+                <div class="progress-bar-background"></div>
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            
+            <div class="steps">
+                <div class="step" data-step="0">
+                    <div class="dot"></div>
+                    <div class="label">Pending</div>
+                </div>
+                <div class="step" data-step="1">
+                    <div class="dot"></div>
+                    <div class="label">Brewing</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="dot"></div>
+                    <div class="label">Delivering</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="dot"></div>
+                    <div class="label">Done</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p class="order-made" id="order-made"></p>
+            <p class="mock-warning" id="mock-warning" style="display: none;">Running in mock mode (Backend unreachable)</p>
+        </div>
+    </div>
+
+    <script src="js/track.js"></script>
+</body>
+</html>

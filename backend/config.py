@@ -1,1 +1,1 @@
-# backend/config.py
+# config.py

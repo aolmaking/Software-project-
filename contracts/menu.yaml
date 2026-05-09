@@ -1,0 +1,196 @@
+openapi: 3.0.3
+
+info:
+  title: Brew & Bake — Menu API
+  version: "1.0"
+  description: >
+    API contract for the Menu slice (Member 1).
+    Covers browsing and filtering the coffee shop menu.
+    Requirements: F-MNU-01 through F-MNU-06, NF-01, NF-04, NF-05.
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  /api/menu:
+    get:
+      operationId: listMenuItems
+      summary: List all menu items, optionally filtered by category
+      description: >
+        Returns all menu items grouped by category.
+        An optional `category` query parameter filters the list without a page reload (F-MNU-03).
+        Must respond within 500 ms under 50 concurrent users (F-MNU-05).
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Filter by category name (case-insensitive). Omit to return all categories.
+          schema:
+            type: string
+            example: "Coffee"
+      responses:
+        '200':
+          description: Menu items returned successfully.
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                enum: ["application/json"]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuListResponse'
+              example:
+                items:
+                  - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    name: "Cappuccino"
+                    category: "Coffee"
+                    price: 55.00
+                    description: "Rich espresso topped with steamed milk foam."
+                    available: true
+                    allergens: ["dairy"]
+                  - id: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+                    name: "Croissant"
+                    category: "Pastries"
+                    price: 35.00
+                    description: "Buttery, flaky French pastry."
+                    available: false
+                    allergens: ["gluten", "dairy"]
+        '500':
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Internal server error"
+                code: "SERVER_ERROR"
+
+  /api/menu/{item_id}:
+    get:
+      operationId: getMenuItem
+      summary: Get a single menu item by ID
+      description: >
+        Returns the full detail of one menu item.
+        The id is a UUID (F-MNU-06 — never a guessable sequential integer).
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          description: UUID of the menu item.
+          schema:
+            type: string
+            format: uuid
+            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        '200':
+          description: Menu item found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '404':
+          description: Menu item not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Menu item not found"
+                code: "NOT_FOUND"
+
+# ─────────────────────────────────────────────
+# COMPONENTS (reusable schemas)
+# ─────────────────────────────────────────────
+components:
+  schemas:
+
+    MenuItem:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - price
+        - description
+        - available
+        - allergens
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: >
+            UUID v4. Never a sequential integer (F-MNU-06).
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Cappuccino"
+        category:
+          type: string
+          description: Grouping label (e.g. Coffee, Pastries, Cold Drinks). (F-MNU-01)
+          example: "Coffee"
+        price:
+          type: number
+          format: float
+          description: Price in EGP, always 2 decimal places. (F-MNU-02)
+          minimum: 0.01
+          example: 55.00
+        description:
+          type: string
+          maxLength: 300
+          description: Short description of the item. (F-MNU-02)
+          example: "Rich espresso topped with steamed milk foam."
+        available:
+          type: boolean
+          description: >
+            If false, the item is sold out. Frontend must show a
+            visual indicator and disable Add-to-Cart. (F-MNU-04)
+          example: true
+        allergens:
+          type: array
+          description: >
+            List of allergen tags present in this item. Empty array if none.
+            Required by Food Safety Regulator (EC-07).
+          items:
+            type: string
+            enum:
+              - nuts
+              - gluten
+              - dairy
+              - eggs
+              - soy
+              - shellfish
+          example: ["dairy"]
+
+    MenuListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: Flat list of menu items. Frontend groups by `category` field.
+          items:
+            $ref: '#/components/schemas/MenuItem'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error description.
+          example: "Menu item not found"
+        code:
+          type: string
+          description: Machine-readable error code for frontend logic branching.
+          example: "NOT_FOUND"

@@ -1,0 +1,133 @@
+openapi: 3.0.3
+
+info:
+  title: Brew & Bake — Order Status Management API
+  version: "1.0"
+  description: >
+    API contract for the Order Status Management slice (Member 4).
+    Requirements: F-STS-01 through F-STS-05, NF-01.
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  /api/status:
+    get:
+      operationId: listActiveOrders
+      summary: Get all non-completed orders for the staff dashboard
+      description: >
+        Returns all orders that are NOT in "completed" status. (F-STS-01)
+        Dashboard must auto-refresh every 30 seconds using this endpoint. (F-STS-04)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /api/status/{order_id}:
+    patch:
+      operationId: advanceOrderStatus
+      summary: Advance an order's status to the next stage
+      description: >
+        Valid forward-only sequence: pending → preparing → ready → completed. (F-STS-02)
+        Any other transition returns HTTP 400. (F-STS-03)
+        Setting a status the order already holds returns HTTP 200 (idempotent). (F-STS-05)
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatusRequest'
+            example:
+              status: "preparing"
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusResponse'
+        '400':
+          description: Invalid status transition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Cannot transition from 'ready' to 'pending'"
+                code: "INVALID_STATUS_TRANSITION"
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+
+    OrderStatus:
+      type: string
+      enum: [pending, preparing, ready, completed]
+      description: The only allowed status values in the system (F-STS-02).
+
+    OrderSummary:
+      type: object
+      required: [order_id, customer_name, status, total, created_at]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        total:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+          description: UTC timestamp of order placement.
+
+    OrderListResponse:
+      type: object
+      required: [orders]
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderSummary'
+
+    UpdateStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+
+    OrderStatusResponse:
+      type: object
+      required: [order_id, status]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+        code:
+          type: string

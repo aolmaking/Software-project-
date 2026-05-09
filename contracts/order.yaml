@@ -1,0 +1,114 @@
+openapi: 3.0.3
+
+info:
+  title: Brew & Bake — Order Placement API
+  version: "1.0"
+  description: >
+    API contract for the Order Placement slice (Member 3).
+    Requirements: F-ORD-01 through F-ORD-06, NF-01, NF-05.
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  /api/order:
+    post:
+      operationId: placeOrder
+      summary: Place an order from the current session cart
+      description: >
+        Converts the current session cart into a confirmed order.
+        Cart must be non-empty (F-ORD-03).
+        Customer name: 1–60 chars, validated against /^[\p{L}\s'\-.]{1,60}$/u (F-ORD-01, F-ORD-06, EC-03).
+        On success: cart is cleared, order_id (UUID) is returned (F-ORD-02).
+        Order total is locked at placement time — price changes afterwards have no effect (F-ORD-04).
+        Initial status is always "pending" (F-ORD-05).
+        Idempotent within a 5-second window: double-POST returns the same order_id (EC-01).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceOrderRequest'
+            example:
+              customer_name: "Ahmed Hassan"
+      responses:
+        '201':
+          description: Order placed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceOrderResponse'
+              example:
+                order_id: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+                status: "pending"
+                total: 145.00
+        '200':
+          description: Idempotent response — duplicate POST within 5 s window returns existing order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceOrderResponse'
+        '400':
+          description: Cart is empty.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Cannot place an order with an empty cart"
+                code: "EMPTY_CART"
+        '422':
+          description: Customer name failed validation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Customer name contains invalid characters"
+                code: "INVALID_INPUT"
+
+components:
+  schemas:
+
+    PlaceOrderRequest:
+      type: object
+      required: [customer_name]
+      properties:
+        customer_name:
+          type: string
+          minLength: 1
+          maxLength: 60
+          pattern: '^[\p{L}\s''\-.]{1,60}$'
+          description: >
+            Customer display name. Sanitised server-side (F-ORD-06).
+            No HTML or script tags allowed.
+          example: "Ahmed Hassan"
+
+    PlaceOrderResponse:
+      type: object
+      required: [order_id, status, total]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          description: UUID v4. Save to sessionStorage immediately on receipt (EC-06).
+          example: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+        status:
+          type: string
+          enum: [pending]
+          description: Always "pending" at placement (F-ORD-05).
+        total:
+          type: number
+          format: float
+          description: Locked total in EGP at time of placement (F-ORD-04).
+          example: 145.00
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+        code:
+          type: string

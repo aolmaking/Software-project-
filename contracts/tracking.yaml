@@ -1,0 +1,88 @@
+openapi: 3.0.3
+
+info:
+  title: Brew & Bake — Order Tracking API
+  version: "1.0"
+  description: >
+    API contract for the Order Tracking slice (Member 5).
+    Requirements: F-TRK-01 through F-TRK-05, NF-01.
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  /api/track/{order_id}:
+    get:
+      operationId: trackOrder
+      summary: Track an order's current status and estimated wait time
+      description: >
+        Returns current order status, a UTC timestamp of the last status change,
+        and an estimated wait time in minutes (F-TRK-01, F-TRK-04, F-TRK-05).
+        Frontend must poll this endpoint every 10 seconds (F-TRK-02).
+        Response MUST NOT expose customer name or item breakdown to protect PII (EC-05).
+        Returns HTTP 404 for unknown order IDs (F-TRK-03).
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          description: >
+            UUID v4. Never a sequential integer (EC-05).
+          schema:
+            type: string
+            format: uuid
+            example: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+      responses:
+        '200':
+          description: Tracking data returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingResponse'
+              example:
+                order_id: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+                status: "preparing"
+                last_updated: "2026-05-09T14:23:00Z"
+                estimated_wait_minutes: 11
+        '404':
+          description: Order not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Order not found"
+                code: "NOT_FOUND"
+
+components:
+  schemas:
+
+    TrackingResponse:
+      type: object
+      required: [order_id, status, last_updated, estimated_wait_minutes]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, preparing, ready, completed]
+        last_updated:
+          type: string
+          format: date-time
+          description: UTC timestamp of the most recent status change (F-TRK-04).
+          example: "2026-05-09T14:23:00Z"
+        estimated_wait_minutes:
+          type: integer
+          description: >
+            ETA = 5 + (N_pending × 3). Returns 0 when status is "completed". (F-TRK-05)
+          example: 11
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+        code:
+          type: string

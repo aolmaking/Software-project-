@@ -1,0 +1,193 @@
+openapi: 3.0.3
+
+info:
+  title: Brew & Bake — Cart API
+  version: "1.0"
+  description: >
+    API contract for the Cart slice (Member 2).
+    Requirements: F-CRT-01 through F-CRT-06, NF-01, NF-04, NF-05.
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  /api/cart:
+    get:
+      operationId: getCart
+      summary: Retrieve the current session cart
+      description: >
+        Returns all items in the session cart with a computed subtotal. (F-CRT-01, F-CRT-04)
+        Subtotal is recomputed from LIVE prices at render time (EC-02).
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+
+    post:
+      operationId: addToCart
+      summary: Add a menu item to the cart
+      description: >
+        If the item is already in the cart, increments its quantity. (F-CRT-02)
+        Rejects unavailable items with HTTP 409. (F-CRT-06)
+        Rejects quantity outside [1, 20] with HTTP 422. (F-CRT-05, EC-04)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToCartRequest'
+      responses:
+        '200':
+          description: Item added or quantity updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '409':
+          description: Item is marked unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Item is currently unavailable"
+                code: "ITEM_UNAVAILABLE"
+        '422':
+          description: Quantity is outside the allowed range [1, 20].
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Quantity must be between 1 and 20"
+                code: "INVALID_QUANTITY"
+
+  /api/cart/{item_id}:
+    patch:
+      operationId: updateCartItem
+      summary: Update quantity of a cart item
+      description: >
+        Sets a new quantity for the item. If quantity becomes 0 the item is removed.
+        Quantity range [1, 20] is still enforced (F-CRT-03, F-CRT-05).
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      operationId: removeCartItem
+      summary: Remove an item from the cart entirely
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+
+    CartItem:
+      type: object
+      required: [item_id, name, price, quantity, subtotal]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+          description: Live price at time of rendering (EC-02).
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+        subtotal:
+          type: number
+          format: float
+          description: price × quantity, rounded to 2 decimal places (F-CRT-04).
+
+    CartResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        total:
+          type: number
+          format: float
+          description: Sum of all item subtotals, 2 decimal places (F-CRT-04).
+
+    AddToCartRequest:
+      type: object
+      required: [item_id, quantity]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+
+    UpdateCartItemRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+        code:
+          type: string

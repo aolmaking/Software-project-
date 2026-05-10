@@ -1,1 +1,257 @@
-/* frontend/css/shared.css */
+/* ═══════════════════════════════════════════════════════════
+   shared.css  —  Saofa Coffee & Bakery
+   Global reset, design tokens, navbar, utility classes.
+   Every page imports this first.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 1. Design tokens ────────────────────────────────────── */
+:root {
+  /* Brand palette (from the Pinterest reference — warm creams & deep browns) */
+  --cream:        #FAF6F1;   /* page background */
+  --warm-white:   #FFFDF9;   /* card background */
+  --brown-dark:   #3B1F0E;   /* navbar, primary buttons */
+  --brown-mid:    #6F3D1F;   /* hover states, section labels */
+  --brown-light:  #A0673A;   /* secondary accents */
+  --gold:         #C9952A;   /* primary accent, CTA */
+  --gold-light:   #E8C97A;   /* text on dark backgrounds */
+  --border:       #E8DDD2;   /* card borders, dividers */
+  --tag-bg:       #F5EEE6;   /* category pill backgrounds */
+
+  /* Semantic text */
+  --text-main:    #2C1810;
+  --text-muted:   #7A5C44;
+  --text-light:   #B89880;
+
+  /* Spacing scale */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+
+  /* Typography */
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 20px;
+}
+
+/* ── 2. Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--cream);
+  color: var(--text-main);
+  font-family: var(--font-serif);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+img, svg { display: block; max-width: 100%; }
+ul { list-style: none; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, textarea, select { font-family: var(--font-sans); }
+
+/* ── 3. Accessibility ─────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── 4. Navbar ────────────────────────────────────────────── */
+.navbar {
+  background: var(--brown-dark);
+  padding: 0 var(--space-xl);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* subtle texture overlay */
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 30px,
+    rgba(201, 149, 42, 0.025) 30px,
+    rgba(201, 149, 42, 0.025) 31px
+  );
+}
+
+.nav-logo {
+  color: var(--gold-light);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+
+.nav-tagline {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #D4C5B5;
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--gold-light);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Reusable nav buttons */
+.nav-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(90, 58, 34, 0.8);
+  color: #D4C5B5;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+.nav-btn.primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--brown-dark);
+  font-weight: 600;
+}
+
+.nav-btn.primary:hover {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+}
+
+/* Cart badge (red dot count) */
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brown-dark);
+  color: var(--gold-light);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── 5. Toast notification ────────────────────────────────── */
+/* Toast is triggered by JS adding .show */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  background: var(--brown-dark);
+  color: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 6. Loading & empty states ───────────────────────────── */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+}
+
+.empty-state a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+/* ── 7. Auth navbar slot ──────────────────────────────────── */
+/* Styles for the dynamically injected login/logout elements */
+#nav-auth-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.nav-username {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--gold-light);
+  letter-spacing: 0.06em;
+}
+
+/* ── 8. Utility classes ───────────────────────────────────── */
+.text-muted  { color: var(--text-muted); }
+.text-light  { color: var(--text-light); }
+.font-sans   { font-family: var(--font-sans); }
+.hidden      { display: none !important; }

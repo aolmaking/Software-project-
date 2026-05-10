@@ -1,48 +1,57 @@
-"""
-cart/models.py
-==============
-Data classes that mirror the Cart schemas in contracts/cart.yaml.
-Member 2 owns this file.
-"""
+# backend/cart/models.py
 
-from dataclasses import dataclass, field
-from typing import List
-
-
-@dataclass
 class CartItem:
-    """Mirrors CartItem schema in contracts/cart.yaml."""
-    item_id: str        # UUID of the menu item
-    name: str
-    price: float        # live price at render time (EC-02)
-    quantity: int       # must be in [1, 20] (F-CRT-05)
+    """
+    Represents a single item inside the shopping cart.
+    """
 
-    @property
-    def subtotal(self) -> float:
-        """price × quantity, rounded to 2 decimal places (F-CRT-04)."""
-        return round(self.price * self.quantity, 2)
+    def __init__(self, item_id, name, price, quantity):
+        self.item_id = item_id
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+        self.subtotal = price * quantity
 
-    def to_dict(self) -> dict:
+    def update_quantity(self, new_quantity):
+        """
+        Update item quantity and recalculate subtotal.
+        """
+        self.quantity = new_quantity
+        self.subtotal = self.price * self.quantity
+
+    def to_dict(self):
+        """
+        Convert CartItem object into dictionary format.
+        """
         return {
             "item_id": self.item_id,
             "name": self.name,
-            "price": round(self.price, 2),
+            "price": self.price,
             "quantity": self.quantity,
-            "subtotal": self.subtotal,
+            "subtotal": self.subtotal
         }
 
 
-@dataclass
 class CartResponse:
-    """Mirrors CartResponse schema in contracts/cart.yaml."""
-    items: List[CartItem] = field(default_factory=list)
+    """
+    Represents the full shopping cart response.
+    """
 
-    @property
-    def total(self) -> float:
-        return round(sum(i.subtotal for i in self.items), 2)
+    def __init__(self, items):
+        self.items = items
+        self.total = self.calculate_total()
 
-    def to_dict(self) -> dict:
+    def calculate_total(self):
+        """
+        Calculate total price of all cart items.
+        """
+        return sum(item.subtotal for item in self.items)
+
+    def to_dict(self):
+        """
+        Convert CartResponse object into dictionary format.
+        """
         return {
-            "items": [i.to_dict() for i in self.items],
-            "total": self.total,
+            "items": [item.to_dict() for item in self.items],
+            "total": self.total
         }

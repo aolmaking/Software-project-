@@ -65,34 +65,6 @@
             color: #54392b;
         }
 
-        /* Premium Logout Button */
-        .btn-logout {
-            background-color: transparent;
-            color: #d32f2f;
-            border: 1px solid #d32f2f;
-            padding: 0.5rem 1.2rem;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-logout:hover {
-            background-color: #d32f2f;
-            color: #FFFFFF;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.15);
-        }
-
-        .btn-logout:active {
-            transform: translateY(0);
-        }
-
         /* Responsive Navbar */
         @media (max-width: 600px) {
             .navbar {
@@ -111,7 +83,6 @@
             text-align: center;
             flex: 1;
         }
-
     </style>
 </head>
 <body>
@@ -128,7 +99,7 @@
             Brewed Awakenings
         </a>
         <div id="navAuthLinks" class="nav-auth-links">
-            <!-- Dynamically populated by updateNavbar() -->
+            <!-- Dynamically populated by updateNavbar() in auth.js -->
         </div>
     </nav>
 
@@ -140,10 +111,9 @@
         </button>
     </div>
 
-    <!-- Load auth logic -->
+    <!-- Load auth logic to handle state & Logout buttons -->
     <script src="js/auth.js"></script>
     <script>
-        // Initialize the navbar state on page load
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.updateNavbar === 'function') {
                 window.updateNavbar();

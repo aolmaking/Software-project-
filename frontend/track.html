@@ -1,1 +1,38 @@
-<!-- frontend/track.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Tracking</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/track.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <header class="dashboard-header">
+            <div class="header-titles">
+                <h1>Order Tracking</h1>
+                <p>Track the status of your orders in real time.</p>
+            </div>
+        </header>
+
+        <!-- Orders Container (Rendered by JS) -->
+        <main id="orders-container" class="orders-list">
+            <!-- Order cards will be dynamically inserted here -->
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="dashboard-footer">
+            <p><i class="fa-solid fa-mug-hot"></i> Thank you for ordering with us!</p>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="js/track.js"></script>
+</body>
+</html>

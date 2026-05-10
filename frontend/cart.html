@@ -1,291 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 28px;
-        }
-
-        .cart-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-
-        .cart-items {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .cart-items h2 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            color: #2c3e50;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-
-        .item-details {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        .item-price {
-            color: #27ae60;
-            font-weight: bold;
-        }
-
-        .item-quantity {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .item-quantity input {
-            width: 50px;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .remove-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.3s;
-        }
-
-        .remove-btn:hover {
-            background-color: #c0392b;
-        }
-
-        .cart-summary {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .summary-item.total {
-            border-top: 2px solid #2c3e50;
-            padding-top: 15px;
-            font-weight: bold;
-            font-size: 18px;
-            color: #27ae60;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 20px;
-        }
-
-        .checkout-btn:hover {
-            background-color: #229954;
-        }
-
-        .continue-shopping-btn {
-            width: 100%;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        .continue-shopping-btn:hover {
-            background-color: #2980b9;
-        }
-
-        .empty-cart {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
-        .empty-cart p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .cart-content {
-                grid-template-columns: 1fr;
-            }
-
-            .cart-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Cart — SOFA Coffee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/cart.css" />
 </head>
 <body>
-    <header>
-        <h1>🛒 Shopping Cart</h1>
-    </header>
 
-    <div class="container">
-        <div class="cart-content">
-            <!-- Cart Items Section -->
-            <div class="cart-items">
-                <h2>Items in Your Cart</h2>
-                
-                <div id="cartItemsContainer">
-                    <!-- Cart items will be dynamically inserted here -->
-                    <div class="cart-item">
-                        <div class="item-details">
-                            <div class="item-name">Sample Product 1</div>
-                            <div class="item-price">$25.99</div>
-                            <div class="item-quantity">
-                                <label>Qty:</label>
-                                <input type="number" value="1" min="1">
-                            </div>
-                        </div>
-                        <button class="remove-btn">Remove</button>
-                    </div>
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <header class="navbar" role="banner">
+    <div class="navbar__inner">
+      <a href="/" class="navbar__brand" aria-label="SOFA home">
+        <span class="navbar__logo-icon" aria-hidden="true">☕</span>
+        <span class="navbar__logo-text">SOFA</span>
+      </a>
 
-                    <div class="cart-item">
-                        <div class="item-details">
-                            <div class="item-name">Sample Product 2</div>
-                            <div class="item-price">$45.50</div>
-                            <div class="item-quantity">
-                                <label>Qty:</label>
-                                <input type="number" value="2" min="1">
-                            </div>
-                        </div>
-                        <button class="remove-btn">Remove</button>
-                    </div>
-                </div>
-            </div>
+      <nav class="navbar__links" aria-label="Primary navigation">
+        <a href="/menu" class="navbar__link">Menu</a>
+        <a href="/about" class="navbar__link">About</a>
+      </nav>
 
-            <!-- Cart Summary Section -->
-            <div class="cart-summary">
-                <h2 style="margin-bottom: 20px; color: #2c3e50;">Order Summary</h2>
-                
-                <div class="summary-item">
-                    <span>Subtotal:</span>
-                    <span>$116.98</span>
-                </div>
-                <div class="summary-item">
-                    <span>Tax (10%):</span>
-                    <span>$11.70</span>
-                </div>
-                <div class="summary-item">
-                    <span>Shipping:</span>
-                    <span>$5.00</span>
-                </div>
-                
-                <div class="summary-item total">
-                    <span>Total:</span>
-                    <span>$133.68</span>
-                </div>
-
-                <button class="checkout-btn">Proceed to Checkout</button>
-                <button class="continue-shopping-btn">Continue Shopping</button>
-            </div>
-        </div>
+      <div class="navbar__cart-indicator" aria-live="polite">
+        <a href="/cart" class="navbar__cart-btn" aria-label="View cart">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <span class="cart-badge" id="cart-badge" aria-label="items in cart">0</span>
+        </a>
+      </div>
     </div>
+  </header>
 
-    <script>
-        // Simple event listeners for remove buttons
-        document.querySelectorAll('.remove-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.closest('.cart-item').remove();
-                alert('Item removed from cart');
-            });
-        });
+  <!-- ══════════════ HERO STRIP ══════════════ -->
+  <div class="cart-hero" aria-hidden="true">
+    <div class="cart-hero__beans"></div>
+  </div>
 
-        // Update total when quantity changes
-        document.querySelectorAll('.item-quantity input').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('Quantity updated to: ' + this.value);
-                // Call function to update cart totals
-            });
-        });
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main class="cart-main" id="main-content">
+    <div class="cart-container">
 
-        // Checkout button
-        document.querySelector('.checkout-btn').addEventListener('click', function() {
-            alert('Proceeding to checkout...');
-            // Redirect to checkout page
-        });
+      <!-- Page heading -->
+      <div class="cart-heading">
+        <h1 class="cart-heading__title">Your Cart</h1>
+        <p class="cart-heading__sub" id="cart-count-label">Loading your order…</p>
+      </div>
 
-        // Continue shopping button
-        document.querySelector('.continue-shopping-btn').addEventListener('click', function() {
-            window.history.back();
-        });
-    </script>
+      <!-- ── Cart grid ── -->
+      <div class="cart-layout">
+
+        <!-- Items column -->
+        <section class="cart-items-col" aria-label="Cart items">
+
+          <!-- Loading skeletons (shown while fetching) -->
+          <div class="skeleton-list" id="skeleton-list" aria-hidden="true">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+
+          <!-- Empty state (hidden initially) -->
+          <div class="empty-state" id="empty-state" hidden>
+            <div class="empty-state__icon" aria-hidden="true">🫙</div>
+            <h2 class="empty-state__title">Your cart is empty</h2>
+            <p class="empty-state__desc">Looks like you haven't added anything yet. Head back to the menu and discover something delicious.</p>
+            <a href="/menu" class="btn btn--primary empty-state__cta">Browse the Menu</a>
+          </div>
+
+          <!-- Cart items list (hidden initially) -->
+          <ul class="cart-items-list" id="cart-items-list" aria-label="Items in your cart" hidden>
+            <!-- Populated by JS -->
+          </ul>
+
+          <!-- Clear cart -->
+          <div class="cart-actions" id="cart-actions" hidden>
+            <button
+              class="btn btn--ghost btn--sm"
+              id="clear-cart-btn"
+              aria-label="Clear entire cart"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+              Clear Cart
+            </button>
+          </div>
+        </section>
+
+        <!-- Order summary column -->
+        <aside class="cart-summary-col" aria-label="Order summary">
+          <div class="order-summary" id="order-summary">
+            <h2 class="order-summary__title">Order Summary</h2>
+
+            <div class="order-summary__row">
+              <span>Subtotal</span>
+              <span id="summary-subtotal" aria-live="polite" aria-atomic="true">—</span>
+            </div>
+            <div class="order-summary__row order-summary__row--muted">
+              <span>Tax (10%)</span>
+              <span id="summary-tax">—</span>
+            </div>
+            <div class="order-summary__divider" role="separator"></div>
+            <div class="order-summary__row order-summary__row--total">
+              <span>Total</span>
+              <span id="summary-total" aria-live="polite" aria-atomic="true">—</span>
+            </div>
+
+            <button
+              class="btn btn--primary btn--full checkout-btn"
+              id="checkout-btn"
+              disabled
+              aria-label="Proceed to checkout"
+            >
+              Proceed to Checkout
+            </button>
+
+            <p class="order-summary__note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              Prices are updated in real time from our menu.
+            </p>
+          </div>
+        </aside>
+
+      </div><!-- /.cart-layout -->
+    </div><!-- /.cart-container -->
+  </main>
+
+  <!-- ══════════════ TOAST ══════════════ -->
+  <div class="toast-container" id="toast-container" aria-live="assertive" aria-atomic="true" role="status"></div>
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer class="site-footer">
+    <p>© 2025 SOFA Coffee & Bakery. Made with love and espresso.</p>
+  </footer>
+
+  <script src="js/cart.js" type="module"></script>
 </body>
 </html>

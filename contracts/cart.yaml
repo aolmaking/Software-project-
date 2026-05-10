@@ -1,180 +1,84 @@
-openapi: 3.0.3
+openapi: "3.1.0"
 
 info:
-  title: Brew & Bake — Cart API
-  version: "1.0"
-  description: >
-    API contract for the Cart slice (Member 2).
-    Requirements: F-CRT-01 through F-CRT-06, NF-01, NF-04, NF-05.
+  title: SOFA Cart API
+  version: "1.0.0"
+  description: |
+    Cart module for the SOFA Coffee Shop & Bakery Ordering System.
+    All responses are JSON. Cart state is stored server-side per session.
 
 servers:
-  - url: http://localhost:5000
+  - url: /api/cart
+    description: Cart API base path
 
-paths:
-
-  /api/cart:
-    get:
-      operationId: getCart
-      summary: Retrieve the current session cart
-      description: >
-        Returns all items in the session cart with a computed subtotal. (F-CRT-01, F-CRT-04)
-        Subtotal is recomputed from LIVE prices at render time (EC-02).
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-
-    post:
-      operationId: addToCart
-      summary: Add a menu item to the cart
-      description: >
-        If the item is already in the cart, increments its quantity. (F-CRT-02)
-        Rejects unavailable items with HTTP 409. (F-CRT-06)
-        Rejects quantity outside [1, 20] with HTTP 422. (F-CRT-05, EC-04)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddToCartRequest'
-      responses:
-        '200':
-          description: Item added or quantity updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '409':
-          description: Item is marked unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "Item is currently unavailable"
-                code: "ITEM_UNAVAILABLE"
-        '422':
-          description: Quantity is outside the allowed range [1, 20].
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "Quantity must be between 1 and 20"
-                code: "INVALID_QUANTITY"
-
-  /api/cart/{item_id}:
-    patch:
-      operationId: updateCartItem
-      summary: Update quantity of a cart item
-      description: >
-        Sets a new quantity for the item. If quantity becomes 0 the item is removed.
-        Quantity range [1, 20] is still enforced (F-CRT-03, F-CRT-05).
-      parameters:
-        - name: item_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateCartItemRequest'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-    delete:
-      operationId: removeCartItem
-      summary: Remove an item from the cart entirely
-      parameters:
-        - name: item_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+# ─────────────────────────────────────────────────────────────────
+# Reusable components
+# ─────────────────────────────────────────────────────────────────
 components:
+
   schemas:
 
     CartItem:
       type: object
-      required: [item_id, name, price, quantity, subtotal]
+      required: [item_id, name, price, quantity, line_total, category, available]
       properties:
         item_id:
           type: string
-          format: uuid
+          description: Unique identifier of the menu item.
+          example: "item-001"
         name:
           type: string
+          example: "Caramel Latte"
         price:
           type: number
           format: float
-          description: Live price at time of rendering (EC-02).
+          description: Current live price from the database.
+          example: 4.50
         quantity:
           type: integer
           minimum: 1
           maximum: 20
-        subtotal:
+          example: 2
+        line_total:
           type: number
           format: float
-          description: price × quantity, rounded to 2 decimal places (F-CRT-04).
+          description: "price × quantity, rounded to 2 dp."
+          example: 9.00
+        category:
+          type: string
+          example: "drinks"
+        available:
+          type: boolean
+          example: true
 
     CartResponse:
       type: object
-      required: [items, total]
+      required: [items, subtotal]
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/CartItem'
-        total:
+            $ref: "#/components/schemas/CartItem"
+        subtotal:
           type: number
           format: float
-          description: Sum of all item subtotals, 2 decimal places (F-CRT-04).
+          description: "Sum of all line_totals, rounded to 2 dp."
+          example: 12.00
 
-    AddToCartRequest:
+    AddItemRequest:
       type: object
       required: [item_id, quantity]
       properties:
         item_id:
           type: string
-          format: uuid
+          example: "item-001"
         quantity:
           type: integer
           minimum: 1
           maximum: 20
+          example: 1
 
-    UpdateCartItemRequest:
+    UpdateQuantityRequest:
       type: object
       required: [quantity]
       properties:
@@ -182,12 +86,277 @@ components:
           type: integer
           minimum: 1
           maximum: 20
+          example: 3
+
+    SuccessMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Item added to cart."
 
     ErrorResponse:
       type: object
-      required: [error, code]
+      required: [error]
       properties:
         error:
           type: string
-        code:
+          example: "Quantity must be between 1 and 20."
+
+    AddItemSuccess:
+      allOf:
+        - $ref: "#/components/schemas/SuccessMessage"
+        - type: object
+          properties:
+            item_id:
+              type: string
+              example: "item-001"
+            quantity:
+              type: integer
+              example: 2
+            subtotal:
+              type: number
+              format: float
+              example: 9.00
+
+    UpdateItemSuccess:
+      allOf:
+        - $ref: "#/components/schemas/SuccessMessage"
+        - type: object
+          properties:
+            item_id:
+              type: string
+              example: "item-001"
+            quantity:
+              type: integer
+              example: 3
+            subtotal:
+              type: number
+              format: float
+              example: 13.50
+
+    RemoveItemSuccess:
+      allOf:
+        - $ref: "#/components/schemas/SuccessMessage"
+        - type: object
+          properties:
+            item_id:
+              type: string
+              example: "item-001"
+            subtotal:
+              type: number
+              format: float
+              example: 3.00
+
+    ClearCartSuccess:
+      type: object
+      properties:
+        message:
           type: string
+          example: "Cart cleared."
+        subtotal:
+          type: number
+          format: float
+          example: 0.00
+
+  responses:
+    BadRequest:
+      description: Malformed request body or missing fields.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Item not found in menu or cart.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    UnprocessableEntity:
+      description: Quantity validation failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            too_small:
+              summary: Quantity below minimum
+              value: { "error": "Quantity must be at least 1." }
+            too_large:
+              summary: Quantity above maximum
+              value: { "error": "Quantity must not exceed 20." }
+            non_integer:
+              summary: Non-integer quantity
+              value: { "error": "Quantity must be an integer." }
+            cumulative_max:
+              summary: Cumulative quantity would exceed max
+              value: { "error": "Total quantity cannot exceed 20. You already have 15 in your cart." }
+
+    Conflict:
+      description: Item is unavailable for ordering.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "Item is currently unavailable."
+
+# ─────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────
+paths:
+
+  /:
+    get:
+      operationId: getCart
+      summary: Retrieve the current session cart
+      description: |
+        Returns all cart items with live DB prices and a calculated subtotal.
+        Empty cart returns items=[] and subtotal=0.00.
+      tags: [Cart]
+      responses:
+        "200":
+          description: Current cart state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+              example:
+                items:
+                  - item_id: "item-001"
+                    name: "Caramel Latte"
+                    price: 4.50
+                    quantity: 2
+                    line_total: 9.00
+                    category: "drinks"
+                    available: true
+                  - item_id: "item-002"
+                    name: "Croissant"
+                    price: 3.00
+                    quantity: 1
+                    line_total: 3.00
+                    category: "bakery"
+                    available: true
+                subtotal: 12.00
+
+    post:
+      operationId: addToCart
+      summary: Add an item to the cart
+      description: |
+        - If the item already exists in the cart, its quantity is incremented.
+        - Validates quantity range [1, 20].
+        - Cumulative quantity (existing + new) must not exceed 20.
+        - Returns 409 if item is marked unavailable in the DB.
+      tags: [Cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddItemRequest"
+            example:
+              item_id: "item-001"
+              quantity: 1
+      responses:
+        "200":
+          description: Item added or quantity incremented.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddItemSuccess"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+
+    delete:
+      operationId: clearCart
+      summary: Clear the entire cart
+      tags: [Cart]
+      responses:
+        "200":
+          description: All items removed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearCartSuccess"
+
+  /{item_id}:
+    parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The menu item ID to update or remove.
+        example: "item-001"
+
+    patch:
+      operationId: updateCartItem
+      summary: Set an explicit quantity for a cart item
+      description: |
+        Replaces the existing quantity with the provided value.
+        The item must already be in the cart.
+        Validates quantity range [1, 20].
+      tags: [Cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQuantityRequest"
+            example:
+              quantity: 3
+      responses:
+        "200":
+          description: Quantity updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateItemSuccess"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+
+    delete:
+      operationId: removeCartItem
+      summary: Remove a single item from the cart
+      tags: [Cart]
+      responses:
+        "200":
+          description: Item removed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemoveItemSuccess"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ─────────────────────────────────────────────────────────────────
+# Validation rules (for reference)
+# ─────────────────────────────────────────────────────────────────
+# quantity:
+#   - Must be an integer (not float, not string, not bool)
+#   - Minimum: 1
+#   - Maximum: 20 (per line item, including cumulative on add)
+#   - Returns HTTP 422 when invalid
+#
+# item availability:
+#   - Checked live from DB on add
+#   - Returns HTTP 409 when unavailable
+#
+# subtotal:
+#   - Always uses current DB prices (not cached)
+#   - Rounded to 2 decimal places
+#
+# SQL:
+#   - All queries use parameterized statements (no string concatenation)

@@ -20,7 +20,7 @@ const BASE_URL = 'http://127.0.0.1:5000/api';
  * @throws {{ status, message }} on non-2xx responses
  */
 async function apiFetch(endpoint, options = {}) {
-  const token = localStorage.getItem('saofa_token');
+  const token = localStorage.getItem('sofa_token');
 
   const headers = {
     'Content-Type': 'application/json',
@@ -31,6 +31,7 @@ async function apiFetch(endpoint, options = {}) {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   // Redirect to login for protected routes
@@ -46,7 +47,11 @@ async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({ message: 'Server error' }));
-    throw { status: response.status, message: err.message || 'Request failed' };
+    throw {
+      status: response.status,
+      message: err.message || err.error || 'Request failed',
+      code: err.code || '',
+    };
   }
 
   // 204 No Content — return null instead of crashing on .json()

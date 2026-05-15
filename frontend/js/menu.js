@@ -1,234 +1,244 @@
-/**
- * menu.js  —  Menu page controller (Member 1's slice)
- *
- * Responsibilities:
- *  - Fetch menu items from GET /api/menu
- *  - Render items grouped by category
- *  - Client-side filter by category pill (F-MNU-03 — no page reload)
- *  - Client-side search filter
- *  - Display allergen tags (F-MNU-02 / EC-07)
- *  - Disable "Add" button for unavailable items (F-MNU-04)
- *  - Add item to cart via POST /api/cart (F-CRT-02)
- *  - Update cart badge after each addition
- *
- * Depends on:  api.js  (must load first)
- */
-
-// ── State ──────────────────────────────────────────────────
-let ALL_ITEMS = [];          // full list fetched once from server
-let activeCategory = '';     // '' = all
+let allItems = [];
+let activeCategory = '';
 let activeSearch = '';
 
-// ── Category display labels & icons ───────────────────────
-const CATEGORY_META = {
-  coffee:   { label: 'Coffee',      icon: '☕' },
-  pastry:   { label: 'Pastries',    icon: '🥐' },
-  cold:     { label: 'Cold drinks', icon: '🧊' },
-  seasonal: { label: 'Seasonal',    icon: '🌸' },
-};
-
-// ── Boot ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  bindFilterButtons();
   bindSearchInput();
+  bindMenuActions();
   loadMenu();
 });
 
-// ── 1. Fetch menu from Flask API ───────────────────────────
 async function loadMenu() {
   try {
-    // GET /api/menu  →  [{ id, name, description, price, category, available, allergens }]
     const data = await apiFetch('/menu');
-    ALL_ITEMS = data.items || [];
+    allItems = normalizeItems(data.items || []);
+    renderCategoryFilters();
     renderMenu();
   } catch (err) {
     showErrorState(err.message || 'Failed to load menu. Please try again.');
   } finally {
-    // Hide the loading spinner
-    const loader = document.getElementById('loading-state');
-    if (loader) loader.classList.add('hidden');
+    document.getElementById('loading-state')?.classList.add('hidden');
   }
 }
 
-// ── 2. Filter pills ────────────────────────────────────────
+function normalizeItems(items) {
+  return items.map((item) => ({
+    id: String(item.id || ''),
+    name: String(item.name || ''),
+    description: String(item.description || ''),
+    price: Number(item.price || 0),
+    category: String(item.category || 'uncategorized'),
+    available: Boolean(item.available),
+    allergens: Array.isArray(item.allergens) ? item.allergens.map(String) : [],
+    imageUrl: String(item.image_url || ''),
+  }));
+}
+
+function renderCategoryFilters() {
+  const container = document.querySelector('.filter-pills');
+  if (!container) return;
+
+  const categories = [...new Set(allItems.map((item) => item.category))]
+    .sort((a, b) => displayCategory(a).localeCompare(displayCategory(b)));
+
+  container.innerHTML = [
+    filterButtonTemplate('', 'All'),
+    ...categories.map((category) => filterButtonTemplate(category, displayCategory(category))),
+  ].join('');
+
+  bindFilterButtons();
+}
+
+function filterButtonTemplate(category, label) {
+  const active = category === activeCategory;
+  return `
+    <button
+      class="filter-btn${active ? ' active' : ''}"
+      type="button"
+      data-cat="${escapeHtml(category)}"
+      aria-pressed="${active ? 'true' : 'false'}"
+    >${escapeHtml(label)}</button>`;
+}
+
 function bindFilterButtons() {
   document.querySelectorAll('.filter-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      // Update active state
-      document.querySelectorAll('.filter-btn').forEach((b) => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
       activeCategory = btn.dataset.cat || '';
+      document.querySelectorAll('.filter-btn').forEach((button) => {
+        const pressed = button.dataset.cat === activeCategory;
+        button.classList.toggle('active', pressed);
+        button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+      });
       renderMenu();
     });
   });
 }
 
-// ── 3. Search input ────────────────────────────────────────
+function bindMenuActions() {
+  const root = document.getElementById('menu-root');
+  if (!root) return;
+
+  root.addEventListener('click', (event) => {
+    const btn = event.target.closest('.add-btn[data-item-id]');
+    if (!btn) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!btn.disabled) {
+      handleAddToCart(btn);
+    }
+  });
+}
+
 function bindSearchInput() {
   const input = document.getElementById('menu-search');
   if (!input) return;
+
   input.addEventListener('input', () => {
     activeSearch = input.value.trim().toLowerCase();
     renderMenu();
   });
 }
 
-// ── 4. Render filtered items grouped by category ───────────
 function renderMenu() {
   const root = document.getElementById('menu-root');
+  if (!root) return;
 
-  // Apply filters
-  const filtered = ALL_ITEMS.filter((item) => {
-    const catMatch = !activeCategory || item.category === activeCategory;
-    const q = activeSearch;
-    const searchMatch =
-      !q ||
-      item.name.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q);
-    return catMatch && searchMatch;
+  const filtered = allItems.filter((item) => {
+    const categoryMatches = !activeCategory || item.category === activeCategory;
+    const queryMatches =
+      !activeSearch ||
+      item.name.toLowerCase().includes(activeSearch) ||
+      item.description.toLowerCase().includes(activeSearch) ||
+      item.allergens.some((allergen) => allergen.toLowerCase().includes(activeSearch));
+
+    return categoryMatches && queryMatches;
   });
 
-  if (filtered.length === 0) {
-    root.innerHTML = `
-      <div class="empty-state">
-        <p>No items found. <a href="index.html">Clear filters</a></p>
-      </div>`;
+  if (!filtered.length) {
+    root.innerHTML = '<div class="empty-state"><p>No menu items found.</p></div>';
     return;
   }
 
-  // Group by category, preserving a consistent display order
-  const order = ['coffee', 'pastry', 'cold', 'seasonal'];
-  const groups = order
-    .map((cat) => ({
-      cat,
-      items: filtered.filter((i) => i.category === cat),
-    }))
-    .filter((g) => g.items.length > 0);
+  const categories = [...new Set(filtered.map((item) => item.category))]
+    .sort((a, b) => displayCategory(a).localeCompare(displayCategory(b)));
 
-  root.innerHTML = groups
-    .map(({ cat, items }) => renderSection(cat, items))
+  root.innerHTML = categories
+    .map((category) => renderSection(category, filtered.filter((item) => item.category === category)))
     .join('');
 
-  // Bind Add-to-Cart buttons after DOM update
-  root.querySelectorAll('.add-btn[data-item-id]').forEach((btn) => {
-    btn.addEventListener('click', () => handleAddToCart(btn));
-  });
 }
 
-// ── 5. Render one category section ────────────────────────
-function renderSection(cat, items) {
-  const meta = CATEGORY_META[cat] || { label: cat, icon: '' };
+function renderSection(category, items) {
   return `
-    <section aria-label="${meta.label}">
-      <p class="section-title">${meta.label}</p>
+    <section aria-label="${escapeHtml(displayCategory(category))}">
+      <h2 class="section-title">${escapeHtml(displayCategory(category))}</h2>
       <div class="menu-grid">
         ${items.map(renderCard).join('')}
       </div>
     </section>`;
 }
 
-// ── 6. Render one menu card ────────────────────────────────
 function renderCard(item) {
-  const meta = CATEGORY_META[item.category] || { icon: '' };
   const unavailable = !item.available;
-
-  // Allergen tags  (EC-07 — legal requirement)
-  const allergenHtml =
-    item.allergens && item.allergens.length
-      ? `<div class="allergen-bar" aria-label="Allergens: ${item.allergens.join(', ')}">
-           ${item.allergens.map((a) => `<span class="allergen-tag">${a}</span>`).join('')}
-         </div>`
-      : '';
-
-  // Sold-out ribbon  (F-MNU-04)
-  const soldOutHtml = unavailable
-    ? `<span class="sold-out-badge" aria-label="Sold out">Sold out</span>`
+  const allergens = item.allergens.filter(Boolean);
+  const allergenHtml = allergens.length
+    ? `<div class="allergen-bar" aria-label="Allergens: ${escapeHtml(allergens.join(', '))}">
+         ${allergens.map((allergen) => `<span class="allergen-tag">${escapeHtml(allergen)}</span>`).join('')}
+       </div>`
     : '';
+  const soldOutHtml = unavailable
+    ? '<span class="sold-out-badge" aria-label="Sold out">Sold out</span>'
+    : '';
+  const imageHtml = item.imageUrl
+    ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />`
+    : `<span class="card-img-fallback" aria-hidden="true">${escapeHtml(displayCategory(item.category).slice(0, 1))}</span>`;
 
   return `
     <article class="menu-card${unavailable ? ' sold-out' : ''}">
-      <div class="card-img" role="img" aria-label="${item.name} image placeholder">
-        <span class="card-img-icon" aria-hidden="true">${meta.icon}</span>
+      <div class="card-img">
+        ${imageHtml}
         ${soldOutHtml}
         ${allergenHtml}
       </div>
       <div class="card-body">
-        <p class="card-name">${escapeHtml(item.name)}</p>
+        <h3 class="card-name">${escapeHtml(item.name)}</h3>
         <p class="card-desc">${escapeHtml(item.description)}</p>
         <div class="card-footer">
-          <span class="price">
-            ${Number(item.price).toFixed(2)}
-            <span class="price-currency">EGP</span>
-          </span>
+          <span class="price">${formatPrice(item.price)} <span class="price-currency">EGP</span></span>
           <button
             class="add-btn"
-            data-item-id="${item.id}"
+            type="button"
+            data-item-id="${escapeHtml(item.id)}"
             data-item-name="${escapeHtml(item.name)}"
             ${unavailable ? 'disabled aria-disabled="true"' : ''}
-            aria-label="Add ${escapeHtml(item.name)} to cart"
-          >Add</button>
+            aria-label="${unavailable ? 'Sold out' : `Add ${escapeHtml(item.name)} to cart`}"
+          >${unavailable ? 'Sold out' : 'Add'}</button>
         </div>
       </div>
     </article>`;
 }
 
-// ── 7. Add to cart ─────────────────────────────────────────
 async function handleAddToCart(btn) {
   const itemId = btn.dataset.itemId;
-  const itemName = btn.dataset.itemName;
+  const itemName = btn.dataset.itemName || 'Item';
 
-  // Prevent double-click during request
   btn.disabled = true;
-  btn.textContent = '…';
+  btn.textContent = 'Adding';
 
   try {
-    // POST /api/cart  →  body: { item_id, quantity: 1 }
-    // F-CRT-02: server increments qty if already in cart
     await apiFetch('/cart', {
       method: 'POST',
       body: JSON.stringify({ item_id: itemId, quantity: 1 }),
     });
-
     showToast(`${itemName} added to cart`);
-    refreshCartBadge();   // update navbar badge
+    refreshCartBadge();
   } catch (err) {
-    // F-CRT-06: 409 means item became unavailable after page load
     if (err.status === 409) {
-      showToast(`${itemName} is no longer available.`);
-      // Visually mark as sold out without a full page reload
-      btn.closest('.menu-card').classList.add('sold-out');
+      markCardSoldOut(btn);
+      showToast(`${itemName} is sold out.`);
     } else {
-      showToast('Could not add item. Please try again.');
+      showToast(err.message || 'Could not add item. Please try again.');
     }
   } finally {
-    // Re-enable only if item is still available
-    const card = btn.closest('.menu-card');
-    if (!card.classList.contains('sold-out')) {
+    if (!btn.closest('.menu-card')?.classList.contains('sold-out')) {
       btn.disabled = false;
       btn.textContent = 'Add';
     }
   }
 }
 
-// ── 8. Error state ─────────────────────────────────────────
-function showErrorState(message) {
-  const root = document.getElementById('menu-root');
-  root.innerHTML = `
-    <div class="empty-state">
-      <p>${escapeHtml(message)}</p>
-      <p><a href="index.html">Retry</a></p>
-    </div>`;
+function markCardSoldOut(btn) {
+  const card = btn.closest('.menu-card');
+  card?.classList.add('sold-out');
+  btn.disabled = true;
+  btn.setAttribute('aria-disabled', 'true');
+  btn.textContent = 'Sold out';
 }
 
-// ── 9. XSS helper ──────────────────────────────────────────
-// Sanitise any string before inserting into innerHTML
-function escapeHtml(str) {
-  return String(str)
+function showErrorState(message) {
+  const root = document.getElementById('menu-root');
+  if (!root) return;
+  root.innerHTML = `<div class="empty-state"><p>${escapeHtml(message)}</p></div>`;
+}
+
+function displayCategory(category) {
+  return String(category || 'uncategorized')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatPrice(price) {
+  return Number(price || 0).toLocaleString('en-EG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

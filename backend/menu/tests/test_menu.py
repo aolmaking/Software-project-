@@ -5,7 +5,7 @@ Test-Driven Prompting (TDP) unit tests for the Menu slice.
 Write ALL tests first → run → confirm RED → implement routes → confirm GREEN.
 
 Mathematical boundaries established here:
-  - GET /api/menu returns ONLY items where available = 1 (TDP boundary 1)
+  - GET /api/menu returns available and sold-out items (TDP boundary 1)
   - GET /api/menu?category=X returns ONLY items of that category (boundary 2)
   - GET /api/menu/<bad_id> returns 404 (boundary 3)
   - price in response is always rounded to 2 decimal places (boundary 4)
@@ -22,12 +22,12 @@ from backend.database import init_db, get_db
 
 # ── Fixtures ───────────────────────────────────────────────
 @pytest.fixture
-def app():
+def app(tmp_path):
     """Create app wired to an in-memory SQLite DB for isolation."""
     application = create_app()
     application.config.update({
         'TESTING': True,
-        'DATABASE': ':memory:',
+        'DATABASE': str(tmp_path / 'test-sofa.db'),
     })
     with application.app_context():
         init_db()               # load schema.sql + seed data
@@ -65,9 +65,9 @@ def _seed_item(db, *, name='Test Latte', category='coffee',
 # TDP BOUNDARY 1 — Only available items in list
 # Failing test written BEFORE routes.py is implemented.
 # ══════════════════════════════════════════════════════════════
-class TestMenuOnlyShowsAvailableItems:
+class TestMenuIncludesSoldOutItems:
 
-    def test_unavailable_item_is_excluded_from_listing(self, client, db, app):
+    def test_unavailable_item_is_included_for_sold_out_display(self, client, db, app):
         """
         Mathematical boundary:
           ∀ item i in response:  i.available == True
@@ -75,7 +75,7 @@ class TestMenuOnlyShowsAvailableItems:
         """
         with app.app_context():
             _seed_item(db, name='Ghost Cake', available=0)
-            available_id = _seed_item(db, name='Real Coffee', available=1)
+            _seed_item(db, name='Real Coffee', available=1)
 
         res = client.get('/api/menu')
         assert res.status_code == 200
@@ -83,13 +83,13 @@ class TestMenuOnlyShowsAvailableItems:
         data = json.loads(res.data)
         names = [item['name'] for item in data['items']]
 
-        assert 'Ghost Cake' not in names, (
-            "Sold-out item must not appear in GET /api/menu response"
-        )
+        assert 'Ghost Cake' in names
         assert 'Real Coffee' in names
+        ghost = next(item for item in data['items'] if item['name'] == 'Ghost Cake')
+        assert ghost['available'] is False
 
-    def test_all_returned_items_have_available_true(self, client, app, db):
-        """Every item in the response must have available=True."""
+    def test_available_flag_is_preserved_for_each_item(self, client, app, db):
+        """Available and unavailable items keep their availability state."""
         with app.app_context():
             _seed_item(db, name='Item A', available=1)
             _seed_item(db, name='Item B', available=0)
@@ -97,10 +97,9 @@ class TestMenuOnlyShowsAvailableItems:
         res = client.get('/api/menu')
         data = json.loads(res.data)
 
-        for item in data['items']:
-            assert item['available'] is True, (
-                f"Item '{item['name']}' should not be in response (available=False)"
-            )
+        availability = {item['name']: item['available'] for item in data['items']}
+        assert availability['Item A'] is True
+        assert availability['Item B'] is False
 
 
 # ══════════════════════════════════════════════════════════════

@@ -39,4 +39,5 @@ if __name__ == "__main__":
     with sqlite3.connect(DB_PATH) as conn:
         with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
             conn.executescript(f.read())
+
     print("Database created successfully.")

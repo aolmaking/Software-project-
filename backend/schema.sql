@@ -50,7 +50,8 @@ BEGIN
     UPDATE customers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 
-CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+CREATE INDEX IF NOT EXISTS idx_customers_email
+ON customers(email);
 
 -- ============================================
 -- 3. CART (SESSION-BASED)

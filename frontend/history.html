@@ -1,1 +1,54 @@
-<!-- history.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sofa — Order History</title>
+  <link rel="stylesheet" href="css/shared.css" />
+  <link rel="stylesheet" href="css/history.css" />
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      S O F A
+      <span class="nav-tagline">Coffee &amp; Bakery</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Menu</a></li>
+      <li><a href="track.html" class="nav-link">Track order</a></li>
+      <li><a href="history.html" class="nav-link active">History</a></li>
+    </ul>
+    <div class="nav-right">
+      <div id="nav-auth-slot"></div>
+      <a href="cart.html" class="nav-btn primary" id="nav-cart-btn" aria-label="View cart">
+        Cart <span class="cart-badge" id="cart-badge">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" style="text-align: center; padding: var(--space-xl) var(--space-md);">
+    <h1 class="hero-title" style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--gold); margin-bottom: var(--space-sm);">Order History</h1>
+    <div class="hero-divider" role="presentation" style="width: 60px; height: 2px; background: var(--border); margin: 0 auto var(--space-md);"></div>
+    <p class="hero-sub" style="font-family: var(--font-sans); color: var(--text-muted);">Your past favorites.</p>
+  </header>
+
+  <!-- ORDERS CONTAINER -->
+  <main class="dashboard-container" id="history-container" aria-live="polite">
+    <div class="loading-state" id="loading-state" aria-busy="true">
+      <p>Loading history...</p>
+    </div>
+  </main>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/api.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

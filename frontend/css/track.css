@@ -1,129 +1,33 @@
-/* track.css */
-:root {
-    --bg-color: #fdfaf6;           /* off-white / cream */
-    --card-bg: #ffffff;
-    --primary-text: #4a3320;       /* dark warm brown */
-    --accent-color: #8b5a2b;       /* medium brown */
-    --secondary-text: #8e8e8e;     /* grey */
-    --disabled-bg: #f5f5f5;        /* light grey */
-    --disabled-text: #b0b0b0;
-    --ready-bg: #fdf5e6;           /* light beige */
-    --shadow-color: rgba(74, 51, 32, 0.08);
-    --border-color: #f0f0f0;
-}
+/* track.css - Redesigned tracking UI using Sofa theme */
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--primary-text);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 40px 20px;
-}
-
+/* Ensure we don't redefine root variables or body resets that conflict with shared.css */
 .dashboard-container {
     width: 100%;
     max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
     display: flex;
     flex-direction: column;
     gap: 30px;
-}
-
-/* Header */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.header-titles h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--primary-text);
-    margin-bottom: 6px;
-}
-
-.header-titles p {
-    font-size: 0.95rem;
-    color: var(--secondary-text);
 }
 
 /* Orders List */
 .orders-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 }
 
-.track-form {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    padding: 18px;
-}
-
-.track-form label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.track-form-row {
-    display: flex;
-    gap: 10px;
-}
-
-.track-form input {
-    flex: 1;
-    min-width: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font: inherit;
-}
-
-.track-form button {
-    border: none;
-    border-radius: 8px;
-    padding: 0 18px;
-    background: var(--accent-color);
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.track-message {
-    min-height: 20px;
-    margin-top: 10px;
-    color: var(--secondary-text);
-    font-size: 0.9rem;
-}
-
-.track-message.error {
-    color: #c0392b;
-}
-
-/* Order Card */
+/* Order Card - Premium Style */
 .order-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    border: 1px solid var(--border-color);
+    background: var(--warm-white);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border);
     overflow: hidden;
-    /* Added opacity and max-height for fade-out auto-removal */
     transition: box-shadow 0.3s ease, transform 0.3s ease, opacity 0.8s ease, max-height 0.8s ease, margin 0.8s ease, padding 0.8s ease;
     opacity: 1;
-    max-height: 2000px; /* Large enough to never clip an open card during normal use */
+    max-height: 2000px; /* For expand/collapse */
 }
 
 .order-card.fade-out {
@@ -137,48 +41,47 @@ body {
 }
 
 .order-card:hover, .order-card.expanded {
-    box-shadow: 0 8px 24px rgba(74, 51, 32, 0.12);
+    box-shadow: 0 12px 30px rgba(59, 31, 14, 0.08); /* var(--brown-dark) based shadow */
     transform: translateY(-2px);
+    border-color: rgba(201, 149, 42, 0.3); /* gold hint */
 }
 
 /* Card Main Row */
 .card-main {
     display: flex;
     align-items: center;
-    padding: 20px;
+    padding: 24px;
     gap: 20px;
     cursor: pointer;
     user-select: none;
-}
-
-.item-image {
-    width: 70px;
-    height: 70px;
-    border-radius: 8px;
-    object-fit: cover;
-    background-color: var(--disabled-bg);
+    background: var(--warm-white);
 }
 
 .order-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 .order-id {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
+    font-family: var(--font-serif);
+    color: var(--brown-dark);
 }
 
 .item-name {
     font-size: 1rem;
+    font-family: var(--font-sans);
+    color: var(--text-main);
     font-weight: 500;
 }
 
 .placed-date {
     font-size: 0.85rem;
-    color: var(--secondary-text);
+    font-family: var(--font-sans);
+    color: var(--text-muted);
 }
 
 /* Status Badge */
@@ -187,46 +90,49 @@ body {
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
     font-size: 0.85rem;
     font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
-/* Base status colors per requirement */
+/* Themed Status Colors */
+.status-pending {
+    background-color: var(--tag-bg);
+    color: var(--text-muted);
+}
+
 .status-preparing {
-    background-color: #f57c00; /* Keeping a bit orange to match "current" */
-    color: #ffffff;
+    background-color: rgba(201, 149, 42, 0.15); /* light gold */
+    color: #B27B15; /* dark gold */
 }
 
 .status-ready {
-    background-color: var(--ready-bg);
-    color: var(--primary-text);
-}
-
-.status-pending {
-    background-color: var(--disabled-bg);
-    color: var(--secondary-text);
+    background-color: rgba(111, 61, 31, 0.1); /* light brown */
+    color: var(--brown-mid);
 }
 
 .status-completed {
-    background-color: #4caf50;
-    color: #ffffff;
+    background-color: rgba(67, 160, 71, 0.1);
+    color: #2E7D32;
 }
 
 /* Toggle Icon */
 .toggle-icon {
     margin-left: 10px;
-    color: var(--secondary-text);
+    color: var(--text-light);
     transition: transform 0.3s ease;
     font-size: 1.1rem;
-    padding: 4px;
+    padding: 8px;
 }
 
 .order-card.expanded .toggle-icon {
     transform: rotate(180deg);
+    color: var(--brown-mid);
 }
 
-/* Expanded Timeline Section */
+/* Expanded Details Section */
 .card-details {
     display: grid;
     grid-template-rows: 0fr;
@@ -239,27 +145,30 @@ body {
 
 .card-details-inner {
     overflow: hidden;
+    background: #FCFAf8; /* slightly off-white from warm-white */
+    border-top: 1px solid var(--border);
 }
 
+/* Timeline Container */
 .timeline-container {
-    padding: 24px 30px 30px 30px;
-    border-top: 1px solid var(--border-color);
+    padding: 40px;
+    position: relative;
 }
 
 .progress-shell {
-    width: 100%;
-    height: 8px;
-    background: var(--disabled-bg);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 24px;
+    position: absolute;
+    top: 62px; /* 40px padding + 24px (half of 48px icon) - 2px (half of 4px height) */
+    left: 70px;
+    right: 70px;
+    height: 4px;
+    background: var(--border);
+    z-index: 1;
 }
 
 .progress-fill {
     height: 100%;
-    background: #4caf50;
-    border-radius: inherit;
-    transition: width 0.3s ease;
+    background: var(--gold);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .timeline-steps {
@@ -267,6 +176,8 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     width: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 .timeline-step {
@@ -275,204 +186,119 @@ body {
     align-items: center;
     position: relative;
     z-index: 3;
-    gap: 8px;
+    gap: 12px;
     width: 80px;
 }
 
 .step-icon {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--card-bg);
-    border: 2px solid var(--disabled-text);
-    color: var(--disabled-text);
+    background-color: var(--cream);
+    border: 2px solid var(--border);
+    color: var(--text-light);
     font-size: 1.1rem;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
 }
 
-/* Completed: Green color (text/border), white bg */
+/* Completed Step */
 .timeline-step.completed .step-icon {
-    border-color: #4caf50;
-    color: #4caf50;
-    background-color: var(--card-bg);
+    border-color: var(--gold);
+    color: var(--gold);
+    background-color: var(--warm-white);
 }
 
 /* Keyframes for glowing active state */
-@keyframes pulseActive {
-    0% {
-        box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(245, 124, 0, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(245, 124, 0, 0);
-    }
+@keyframes pulseActiveGold {
+    0% { box-shadow: 0 0 0 0 rgba(201, 149, 42, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(201, 149, 42, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(201, 149, 42, 0); }
 }
 
-/* Current: Orange (solid bg, white icon) */
+/* Current Step */
 .timeline-step.current .step-icon {
-    border-color: #f57c00;
-    background-color: #f57c00;
-    color: #fff;
-    animation: pulseActive 2s infinite; /* Smooth pulse effect */
+    border-color: var(--gold);
+    background-color: var(--gold);
+    color: var(--brown-dark);
+    animation: pulseActiveGold 2s infinite;
 }
 
 .step-info {
     text-align: center;
+    font-family: var(--font-sans);
 }
 
 .step-name {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--disabled-text);
+    color: var(--text-light);
     transition: color 0.3s ease;
 }
 
 .step-time {
     margin-top: 4px;
-    color: var(--secondary-text);
-    font-size: 0.7rem;
-    line-height: 1.25;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.3;
 }
 
 .timeline-step.completed .step-name {
-    color: #4caf50;
+    color: var(--brown-mid);
 }
 
 .timeline-step.current .step-name {
-    color: #f57c00;
+    color: var(--brown-dark);
     font-weight: 700;
-}
-
-/* Timeline Connectors */
-.timeline-connector {
-    flex: 1;
-    height: 2px;
-    background-image: linear-gradient(to right, var(--disabled-text) 50%, transparent 50%);
-    background-size: 12px 100%;
-    margin-top: 21px; /* Align with center of 44px icon */
-    position: relative;
-    z-index: 1;
-    margin-left: -12px; /* Pull underneath the icons */
-    margin-right: -12px;
-}
-
-.timeline-connector .fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background-color: #4caf50; /* Green for completed paths */
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth fluid animation for progress */
 }
 
 /* Expanded Grid layout for Items & Metadata */
 .expanded-info-grid {
-    display: flex;
-    gap: 30px;
-    padding: 0 30px 30px 30px;
+    padding: 0 40px 32px 40px;
 }
 
-@media (max-width: 600px) {
-    .expanded-info-grid {
-        flex-direction: column;
-        gap: 20px;
-        padding: 0 16px 20px 16px;
-    }
-}
-
-.ordered-items-section, .order-metadata-section {
-    flex: 1;
-    background: #fafafa;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
+.order-metadata-section {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
-.ordered-items-section h3, .order-metadata-section h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--primary-text);
+.order-metadata-section h3 {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: var(--brown-dark);
     margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
 }
 
-/* Table styles */
-.items-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.items-table th {
-    text-align: left;
-    color: var(--secondary-text);
-    font-weight: 500;
-    padding-bottom: 8px;
-}
-
-.items-table td {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.items-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.total-label {
-    text-align: right;
-    font-weight: 600;
-    padding-top: 12px;
-    padding-right: 16px;
-    color: var(--secondary-text);
-}
-
-.total-value {
-    font-weight: 700;
-    padding-top: 12px;
-    color: var(--primary-text);
-}
-
-/* Metadata styles */
 .order-metadata-section p {
-    font-size: 0.9rem;
-    margin-bottom: 12px;
-    color: var(--secondary-text);
-    line-height: 1.4;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.5;
 }
 
 .order-metadata-section p strong {
-    color: var(--primary-text);
-}
-
-/* Footer */
-.dashboard-footer {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--secondary-text);
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.dashboard-footer i {
-    margin-right: 6px;
-    color: var(--accent-color);
-    opacity: 0.7;
+    color: var(--brown-dark);
+    font-weight: 600;
 }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
+    .dashboard-container {
+        padding: 0 16px;
+        margin: 20px auto;
+    }
+
     .card-main {
         flex-wrap: wrap;
-        padding: 16px;
-        gap: 12px;
+        padding: 20px;
+        gap: 16px;
     }
     
     .status-badge {
@@ -485,7 +311,11 @@ body {
     }
     
     .timeline-container {
-        padding: 20px 10px;
+        padding: 24px 16px;
+    }
+
+    .expanded-info-grid {
+        padding: 0 16px 24px 16px;
     }
     
     .timeline-step {

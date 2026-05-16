@@ -1,1 +1,163 @@
 /* history.css */
+.dashboard-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* History Card - Receipt Style */
+.history-card {
+    background: var(--warm-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px dashed var(--border);
+    overflow: hidden;
+    margin-bottom: 20px;
+    position: relative;
+    padding: 0;
+}
+
+/* Receipt jagged edge effect */
+.history-card::before, .history-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background-size: 20px 20px;
+    z-index: 10;
+}
+.history-card::before {
+    top: -5px;
+    background-image: radial-gradient(circle at 10px 0, transparent 10px, var(--warm-white) 11px);
+}
+.history-card::after {
+    bottom: -5px;
+    background-image: radial-gradient(circle at 10px 20px, transparent 10px, var(--warm-white) 11px);
+}
+
+.history-card:hover, .history-card.expanded {
+    box-shadow: 0 8px 24px rgba(74, 51, 32, 0.1);
+}
+
+.card-main {
+    display: flex;
+    align-items: center;
+    padding: 24px;
+    gap: 20px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px dashed var(--border);
+}
+
+.order-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-id {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--brown-dark);
+}
+
+.completed-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.toggle-icon {
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+    padding: 4px;
+}
+
+.history-card.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.card-details {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.history-card.expanded .card-details {
+    grid-template-rows: 1fr;
+}
+
+.card-details-inner {
+    overflow: hidden;
+    background: #fafafa;
+}
+
+.receipt-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.receipt-items {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.receipt-items th, .receipt-items td {
+    padding: 8px 0;
+    border-bottom: 1px solid #eaeaea;
+    font-size: 0.9rem;
+}
+
+.receipt-items th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.receipt-items td.price {
+    text-align: right;
+}
+
+.receipt-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding-top: 10px;
+    border-top: 2px dashed var(--border);
+}
+
+.timeline-mini {
+    display: flex;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+.reorder-btn {
+    background: var(--gold);
+    color: var(--brown-dark);
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    display: inline-block;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.reorder-btn:hover {
+    background: var(--gold-light);
+}

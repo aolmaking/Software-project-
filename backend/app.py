@@ -8,7 +8,6 @@ from backend.config import Config
 from backend.database import close_db, init_db
 from backend.menu.routes import menu_bp
 from backend.order.routes import order_bp
-from backend.order.status_routes import status_bp
 from backend.tracking.routes import tracking_bp
 
 
@@ -24,7 +23,6 @@ def create_app(static_folder=None, static_url_path=""):
     app.register_blueprint(tracking_bp, url_prefix="/api/track")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(order_bp, url_prefix="/api/order")
-    app.register_blueprint(status_bp, url_prefix="/api/status")
 
     @app.after_request
     def after_request(response):

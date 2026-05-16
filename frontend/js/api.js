@@ -45,9 +45,8 @@ async function apiFetch(endpoint, options = {}) {
     credentials: 'include',
   });
 
-  // Redirect to login for protected routes
   if (response.status === 401) {
-    const onProtectedPage = ['/checkout.html'].some(
+    const onProtectedPage = ['/checkout.html', '/track.html', '/history.html', '/cart.html'].some(
       (p) => window.location.pathname.includes(p)
     );
     if (onProtectedPage) {

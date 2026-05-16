@@ -1,303 +1,233 @@
-"""
-backend/cart/routes.py
-Cart module — Flask Blueprint
-SOFA Coffee Shop & Bakery Ordering System
-"""
+import uuid
 
-from flask import Blueprint, jsonify, session, current_app
-import sqlite3
-import os
+from flask import Blueprint, jsonify, make_response, request
+
+from backend.database import get_db
 
 cart_bp = Blueprint("cart", __name__, url_prefix="/api/cart")
 
-# ─────────────────────────────────────────
-# Constants
-# ─────────────────────────────────────────
+SESSION_COOKIE = "sofa_session_id"
 MIN_QTY = 1
 MAX_QTY = 20
-DB_PATH = os.environ.get("SOFA_DB_PATH", "sofa.db")
 
 
-# ─────────────────────────────────────────
-# DB helper
-# ─────────────────────────────────────────
-def get_db():
-    """Return a SQLite connection with row_factory set."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-# ─────────────────────────────────────────
-# Cart session helpers
-# ─────────────────────────────────────────
-def get_cart() -> dict:
-    """
-    Return the current session cart.
-    Structure: { item_id: quantity, ... }
-    """
-    return session.get("cart", {})
-
-
-def save_cart(cart: dict) -> None:
-    """Persist cart dict into the session."""
-    session["cart"] = cart
-    session.modified = True
-
-
-# ─────────────────────────────────────────
-# Validation helper
-# ─────────────────────────────────────────
-def validate_quantity(value) -> tuple[bool, str]:
-    """
-    Returns (is_valid, error_message).
-    Accepts int in [MIN_QTY, MAX_QTY].
-    Rejects non-int, zero, negative, or oversized values.
-    """
-    if not isinstance(value, int) or isinstance(value, bool):
-        return False, "Quantity must be an integer."
-    if value < MIN_QTY:
-        return False, f"Quantity must be at least {MIN_QTY}."
-    if value > MAX_QTY:
-        return False, f"Quantity must not exceed {MAX_QTY}."
-    return True, ""
-
-
-# ─────────────────────────────────────────
-# Menu item helper
-# ─────────────────────────────────────────
-def get_menu_item(item_id: str) -> dict | None:
-    """
-    Fetch a menu item row from the `items` table.
-    Returns a dict or None if not found.
-    Uses parameterized query — no string concatenation.
-    """
-    conn = get_db()
-    try:
-        row = conn.execute(
-            "SELECT id, name, price, description, available, allergens, category "
-            "FROM items WHERE id = ?",
-            (item_id,),
-        ).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
-
-
-# ─────────────────────────────────────────
-# Subtotal helper
-# ─────────────────────────────────────────
-def calculate_subtotal(cart: dict) -> float:
-    """
-    Calculate cart subtotal using LIVE database prices.
-    subtotal = Σ(quantity × current_price)  rounded to 2 dp.
-    """
-    if not cart:
-        return 0.00
-
-    conn = get_db()
-    try:
-        total = 0.0
-        for item_id, qty in cart.items():
-            row = conn.execute(
-                "SELECT price FROM items WHERE id = ?", (item_id,)
-            ).fetchone()
-            if row:
-                total += row["price"] * qty
-        return round(total, 2)
-    finally:
-        conn.close()
-
-
-# ─────────────────────────────────────────
-# Cart item serialiser
-# ─────────────────────────────────────────
-def build_cart_items(cart: dict) -> list[dict]:
-    """
-    Return list of cart item dicts with live DB data merged in.
-    Items whose DB record no longer exists are silently omitted.
-    """
-    if not cart:
-        return []
-
-    conn = get_db()
-    items = []
-    try:
-        for item_id, qty in cart.items():
-            row = conn.execute(
-                "SELECT id, name, price, description, available, category "
-                "FROM items WHERE id = ?",
-                (item_id,),
-            ).fetchone()
-            if row:
-                items.append(
-                    {
-                        "item_id": row["id"],
-                        "name": row["name"],
-                        "price": round(row["price"], 2),
-                        "quantity": qty,
-                        "line_total": round(row["price"] * qty, 2),
-                        "category": row["category"],
-                        "available": bool(row["available"]),
-                    }
-                )
-    finally:
-        conn.close()
-    return items
-
-
-# ═══════════════════════════════════════════════════════
-# ROUTES
-# ═══════════════════════════════════════════════════════
-
-
-# GET /api/cart
-@cart_bp.get("/")
+@cart_bp.route("", methods=["GET"])
+@cart_bp.route("/", methods=["GET"])
 def view_cart():
-    """Return full cart with live prices and subtotal."""
-    cart = get_cart()
-    items = build_cart_items(cart)
-    subtotal = calculate_subtotal(cart)
-    return jsonify({"items": items, "subtotal": subtotal}), 200
+    session_id = _get_session_id()
+    rows = get_db().execute(
+        """
+        SELECT ci.item_public_id, ci.quantity, i.name, i.price, i.available, i.category
+        FROM cart_items AS ci
+        JOIN items AS i ON i.public_id = ci.item_public_id
+        WHERE ci.session_id = ?
+        ORDER BY ci.added_at, i.name
+        """,
+        (session_id,),
+    ).fetchall()
+
+    items = [_cart_row_to_dict(row) for row in rows]
+    total = round(sum(item["subtotal"] for item in items), 2)
+
+    payload = {
+        "items": items,
+        "total": total,
+        "subtotal": total,
+    }
+    return _json_with_session(payload, session_id), 200
 
 
-# POST /api/cart
-@cart_bp.post("/")
+@cart_bp.route("", methods=["POST"])
+@cart_bp.route("/", methods=["POST"])
 def add_to_cart():
-    """
-    Add an item to the cart or increment its quantity.
+    payload = request.get_json(silent=True) or {}
+    item_public_id = str(payload.get("item_id", "")).strip()
 
-    Request JSON:
-        { "item_id": "<id>", "quantity": <int> }
-    """
-    from flask import request
-
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"error": "Request body must be JSON."}), 400
-
-    item_id = data.get("item_id")
-    quantity = data.get("quantity")
-
-    # ── Validate item_id ──
-    if not item_id or not isinstance(item_id, str):
-        return jsonify({"error": "item_id is required and must be a string."}), 400
-
-    # ── Validate quantity ──
-    valid, msg = validate_quantity(quantity)
+    valid, error_message, quantity = _parse_quantity(payload.get("quantity", 1))
     if not valid:
-        return jsonify({"error": msg}), 422
+        return jsonify({"error": error_message, "code": "BAD_REQUEST"}), 400
 
-    # ── Fetch menu item ──
-    menu_item = get_menu_item(item_id)
-    if menu_item is None:
-        return jsonify({"error": "Item not found."}), 404
+    if not item_public_id:
+        return jsonify({"error": "item_id is required", "code": "BAD_REQUEST"}), 400
 
-    # ── Check availability (F-CRT-06) ──
-    if not menu_item["available"]:
-        return jsonify({"error": "Item is currently unavailable."}), 409
+    db = get_db()
+    item = db.execute(
+        """
+        SELECT public_id, available
+        FROM items
+        WHERE public_id = ?
+        """,
+        (item_public_id,),
+    ).fetchone()
 
-    # ── Update cart ──
-    cart = get_cart()
-    current_qty = cart.get(item_id, 0)
-    new_qty = current_qty + quantity
+    if item is None:
+        return jsonify({"error": "Menu item not found", "code": "NOT_FOUND"}), 404
 
-    # ── Enforce max after addition ──
-    if new_qty > MAX_QTY:
-        return (
-            jsonify(
-                {
-                    "error": f"Total quantity cannot exceed {MAX_QTY}. "
-                    f"You already have {current_qty} in your cart."
-                }
-            ),
-            422,
-        )
+    if not bool(item["available"]):
+        return jsonify({"error": "Item is sold out", "code": "SOLD_OUT"}), 409
 
-    cart[item_id] = new_qty
-    save_cart(cart)
-
-    return (
-        jsonify(
-            {
-                "message": "Item added to cart.",
-                "item_id": item_id,
-                "quantity": new_qty,
-                "subtotal": calculate_subtotal(cart),
-            }
-        ),
-        200,
+    session_id = _get_session_id()
+    db.execute(
+        """
+        INSERT INTO cart_items (session_id, item_public_id, quantity)
+        VALUES (?, ?, ?)
+        ON CONFLICT(session_id, item_public_id)
+        DO UPDATE SET quantity = min(cart_items.quantity + excluded.quantity, ?)
+        """,
+        (session_id, item_public_id, quantity, MAX_QTY),
     )
+    db.commit()
+
+    return _json_with_session({"message": "Item added to cart"}, session_id), 201
 
 
-# PATCH /api/cart/<item_id>
-@cart_bp.patch("/<item_id>")
-def update_cart_item(item_id: str):
-    """
-    Set an explicit quantity for a cart item.
+@cart_bp.route("/<item_id>", methods=["PATCH"])
+def update_cart_item(item_id):
+    payload = request.get_json(silent=True) or {}
 
-    Request JSON:
-        { "quantity": <int> }
-    """
-    from flask import request
-
-    cart = get_cart()
-    if item_id not in cart:
-        return jsonify({"error": "Item not in cart."}), 404
-
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"error": "Request body must be JSON."}), 400
-
-    quantity = data.get("quantity")
-
-    # ── Validate quantity ──
-    valid, msg = validate_quantity(quantity)
+    valid, error_message, quantity = _parse_quantity(payload.get("quantity"))
     if not valid:
-        return jsonify({"error": msg}), 422
+        return jsonify({"error": error_message, "code": "BAD_REQUEST"}), 400
 
-    cart[item_id] = quantity
-    save_cart(cart)
+    session_id = _get_session_id()
+    db = get_db()
 
-    return (
-        jsonify(
-            {
-                "message": "Quantity updated.",
-                "item_id": item_id,
-                "quantity": quantity,
-                "subtotal": calculate_subtotal(cart),
-            }
-        ),
-        200,
+    existing = db.execute(
+        """
+        SELECT 1
+        FROM cart_items
+        WHERE session_id = ? AND item_public_id = ?
+        """,
+        (session_id, item_id),
+    ).fetchone()
+
+    if existing is None:
+        return jsonify({"error": "Item not in cart", "code": "NOT_FOUND"}), 404
+
+    db.execute(
+        """
+        UPDATE cart_items
+        SET quantity = ?
+        WHERE session_id = ? AND item_public_id = ?
+        """,
+        (quantity, session_id, item_id),
     )
+    db.commit()
+
+    return _json_with_session(
+        {
+            "message": "Quantity updated",
+            "item_id": item_id,
+            "quantity": quantity,
+            "subtotal": _calculate_subtotal(session_id),
+        },
+        session_id,
+    ), 200
 
 
-# DELETE /api/cart/<item_id>
-@cart_bp.delete("/<item_id>")
-def remove_cart_item(item_id: str):
-    """Remove a single item from the cart."""
-    cart = get_cart()
-    if item_id not in cart:
-        return jsonify({"error": "Item not in cart."}), 404
+@cart_bp.route("/<item_id>", methods=["DELETE"])
+def remove_cart_item(item_id):
+    session_id = _get_session_id()
+    db = get_db()
 
-    del cart[item_id]
-    save_cart(cart)
-
-    return (
-        jsonify(
-            {
-                "message": "Item removed from cart.",
-                "item_id": item_id,
-                "subtotal": calculate_subtotal(cart),
-            }
-        ),
-        200,
+    result = db.execute(
+        """
+        DELETE FROM cart_items
+        WHERE session_id = ? AND item_public_id = ?
+        """,
+        (session_id, item_id),
     )
+    db.commit()
+
+    if result.rowcount == 0:
+        return jsonify({"error": "Item not in cart", "code": "NOT_FOUND"}), 404
+
+    return _json_with_session(
+        {
+            "message": "Item removed from cart",
+            "item_id": item_id,
+            "subtotal": _calculate_subtotal(session_id),
+        },
+        session_id,
+    ), 200
 
 
-# DELETE /api/cart
-@cart_bp.delete("/")
+@cart_bp.route("", methods=["DELETE"])
+@cart_bp.route("/", methods=["DELETE"])
 def clear_cart():
-    """Remove all items from the cart."""
-    save_cart({})
-    return jsonify({"message": "Cart cleared.", "subtotal": 0.00}), 200
+    session_id = _get_session_id()
+    get_db().execute(
+        """
+        DELETE FROM cart_items
+        WHERE session_id = ?
+        """,
+        (session_id,),
+    )
+    get_db().commit()
+
+    return _json_with_session({"message": "Cart cleared", "subtotal": 0.00, "total": 0.00}, session_id), 200
+
+
+def _parse_quantity(value):
+    try:
+        quantity = int(value)
+    except (TypeError, ValueError):
+        return False, "Quantity must be a number", None
+
+    if quantity < MIN_QTY or quantity > MAX_QTY:
+        return False, f"Quantity must be between {MIN_QTY} and {MAX_QTY}", None
+
+    return True, "", quantity
+
+
+def _get_session_id():
+    session_id = request.cookies.get(SESSION_COOKIE, "").strip()
+    if len(session_id) == 36:
+        return session_id
+    return str(uuid.uuid4())
+
+
+def _json_with_session(payload, session_id):
+    response = make_response(jsonify(payload))
+    response.set_cookie(
+        SESSION_COOKIE,
+        session_id,
+        max_age=60 * 60 * 24 * 30,
+        samesite="Lax",
+    )
+    return response
+
+
+def _cart_row_to_dict(row):
+    price = round(float(row["price"]), 2)
+    quantity = int(row["quantity"])
+    subtotal = round(price * quantity, 2)
+
+    item = {
+        "item_id": row["item_public_id"],
+        "name": row["name"],
+        "price": price,
+        "quantity": quantity,
+        "available": bool(row["available"]),
+        "subtotal": subtotal,
+        "line_total": subtotal,
+    }
+
+    if "category" in row.keys():
+        item["category"] = row["category"]
+
+    return item
+
+
+def _calculate_subtotal(session_id):
+    row = get_db().execute(
+        """
+        SELECT COALESCE(SUM(ci.quantity * i.price), 0) AS subtotal
+        FROM cart_items AS ci
+        JOIN items AS i ON i.public_id = ci.item_public_id
+        WHERE ci.session_id = ?
+        """,
+        (session_id,),
+    ).fetchone()
+
+    return round(float(row["subtotal"]), 2)

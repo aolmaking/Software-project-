@@ -1,9 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Index</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sofa — Menu</title>
+  <!-- shared styles first, then menu-specific -->
+  <link rel="stylesheet" href="css/shared.css" />
+  <link rel="stylesheet" href="css/menu.css" />
 </head>
 <body>
-    <!-- empty -->
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      S O F A
+      <span class="nav-tagline">Coffee &amp; Bakery</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link active">Menu</a></li>
+      <li><a href="track.html" class="nav-link">Track order</a></li>
+    </ul>
+    <div class="nav-right">
+      <div id="nav-auth-slot"></div>
+      <a href="cart.html" class="nav-btn primary" id="nav-cart-btn" aria-label="View cart">
+        Cart <span class="cart-badge" id="cart-badge">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <h1 class="hero-title">The menu</h1>
+    <div class="hero-divider" role="presentation"></div>
+    <p class="hero-sub">Crafted with patience. Served with warmth.</p>
+  </header>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar" role="navigation" aria-label="Menu category filters">
+    <div class="filter-pills">
+      <button class="filter-btn active" type="button" data-cat="" aria-pressed="true">All</button>
+      <button class="filter-btn" type="button" data-cat="coffee" aria-pressed="false">Coffee</button>
+      <button class="filter-btn" type="button" data-cat="pastry" aria-pressed="false">Pastries</button>
+      <button class="filter-btn" type="button" data-cat="cold" aria-pressed="false">Cold drinks</button>
+      <button class="filter-btn" type="button" data-cat="seasonal" aria-pressed="false">Seasonal</button>
+    </div>
+    <div class="search-wrap">
+      <label for="menu-search" class="sr-only">Search menu</label>
+      <svg class="search-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="search" id="menu-search" placeholder="Search menu..." autocomplete="off" />
+    </div>
+  </div>
+
+  <!-- MENU CONTENT -->
+  <main class="menu-section" id="menu-root" aria-live="polite" aria-label="Menu items">
+    <div class="loading-state" id="loading-state" aria-busy="true">
+      <p>Loading menu...</p>
+    </div>
+  </main>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/api.js?v=sofa-menu-2"></script>
+  <script src="js/menu.js?v=sofa-menu-2"></script>
 </body>
 </html>

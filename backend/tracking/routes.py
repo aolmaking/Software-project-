@@ -1,41 +1,74 @@
-# backend/tracking/routes.py
 from flask import Blueprint, jsonify
-from datetime import datetime
 
-tracking_bp = Blueprint('tracking_bp', __name__)
+from backend.database import get_db
+from backend.tracking.models import TrackingResponse, calculate_eta
 
-# Mock database of orders with their creation time
+
+tracking_bp = Blueprint("tracking", __name__)
+
+# Kept only so stale tests/imports do not crash; real tracking is DB-backed.
 orders_db = {}
 
-@tracking_bp.route('/<order_id>', methods=['GET'])
+
+@tracking_bp.route("/<order_id>", methods=["GET"])
 def get_order_tracking(order_id):
-    if order_id not in orders_db:
-        # Initialize order tracking for demo purposes
-        # Assuming payment just happened
-        orders_db[order_id] = {
-            'created_at': datetime.now()
-        }
-    
-    order = orders_db[order_id]
-    elapsed = datetime.now() - order['created_at']
-    elapsed_minutes = elapsed.total_seconds() / 60
+    db = get_db()
+    order = db.execute(
+        """
+        SELECT order_public_id, status, updated_at, created_at
+        FROM orders
+        WHERE order_public_id = ?
+        """,
+        (order_id,),
+    ).fetchone()
 
-    # Auto-reset for demo purposes if the user visits the page way after testing
-    if elapsed_minutes >= 10:
-        orders_db[order_id]['created_at'] = datetime.now()
-        elapsed_minutes = 0
+    if order is None:
+        return jsonify({"error": "Order not found", "code": "NOT_FOUND"}), 404
 
-    if elapsed_minutes < 2:
-        status = "pending"
-    elif elapsed_minutes < 4:
-        status = "brewing"
-    elif elapsed_minutes < 6:
-        status = "delivering"
+    events = db.execute(
+        """
+        SELECT status, event_timestamp
+        FROM tracking_events
+        WHERE order_public_id = ?
+        ORDER BY event_timestamp ASC, id ASC
+        """,
+        (order_id,),
+    ).fetchall()
+
+    last_updated = (
+        events[-1]["event_timestamp"]
+        if events
+        else order["updated_at"] or order["created_at"]
+    )
+
+    if order["status"] == "completed":
+        eta = 0
     else:
-        status = "done"
+        pending_count = db.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM orders
+            WHERE status = 'pending'
+            """
+        ).fetchone()["count"]
+        eta = calculate_eta(int(pending_count))
 
-    return jsonify({
-        "order_id": order_id,
-        "status": status,
-        "elapsed_minutes": round(elapsed_minutes, 2)
-    })
+    response = TrackingResponse(
+        order_id=order["order_public_id"],
+        status=order["status"],
+        last_updated=_format_timestamp(last_updated),
+        estimated_wait_minutes=eta,
+    ).to_dict()
+    response["timeline"] = [
+        {
+            "status": row["status"],
+            "timestamp": _format_timestamp(row["event_timestamp"]),
+        }
+        for row in events
+    ]
+
+    return jsonify(response), 200
+
+
+def _format_timestamp(value):
+    return str(value).replace(" ", "T") + "Z" if value else ""

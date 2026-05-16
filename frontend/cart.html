@@ -1,291 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 28px;
-        }
-
-        .cart-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-
-        .cart-items {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .cart-items h2 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            color: #2c3e50;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-
-        .item-details {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        .item-price {
-            color: #27ae60;
-            font-weight: bold;
-        }
-
-        .item-quantity {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .item-quantity input {
-            width: 50px;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .remove-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.3s;
-        }
-
-        .remove-btn:hover {
-            background-color: #c0392b;
-        }
-
-        .cart-summary {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .summary-item.total {
-            border-top: 2px solid #2c3e50;
-            padding-top: 15px;
-            font-weight: bold;
-            font-size: 18px;
-            color: #27ae60;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 20px;
-        }
-
-        .checkout-btn:hover {
-            background-color: #229954;
-        }
-
-        .continue-shopping-btn {
-            width: 100%;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        .continue-shopping-btn:hover {
-            background-color: #2980b9;
-        }
-
-        .empty-cart {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
-        .empty-cart p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .cart-content {
-                grid-template-columns: 1fr;
-            }
-
-            .cart-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brew & Bake - Cart</title>
+  <link rel="stylesheet" href="css/shared.css" />
+  <link rel="stylesheet" href="css/cart.css" />
 </head>
 <body>
-    <header>
-        <h1>🛒 Shopping Cart</h1>
-    </header>
-
-    <div class="container">
-        <div class="cart-content">
-            <!-- Cart Items Section -->
-            <div class="cart-items">
-                <h2>Items in Your Cart</h2>
-                
-                <div id="cartItemsContainer">
-                    <!-- Cart items will be dynamically inserted here -->
-                    <div class="cart-item">
-                        <div class="item-details">
-                            <div class="item-name">Sample Product 1</div>
-                            <div class="item-price">$25.99</div>
-                            <div class="item-quantity">
-                                <label>Qty:</label>
-                                <input type="number" value="1" min="1">
-                            </div>
-                        </div>
-                        <button class="remove-btn">Remove</button>
-                    </div>
-
-                    <div class="cart-item">
-                        <div class="item-details">
-                            <div class="item-name">Sample Product 2</div>
-                            <div class="item-price">$45.50</div>
-                            <div class="item-quantity">
-                                <label>Qty:</label>
-                                <input type="number" value="2" min="1">
-                            </div>
-                        </div>
-                        <button class="remove-btn">Remove</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cart Summary Section -->
-            <div class="cart-summary">
-                <h2 style="margin-bottom: 20px; color: #2c3e50;">Order Summary</h2>
-                
-                <div class="summary-item">
-                    <span>Subtotal:</span>
-                    <span>$116.98</span>
-                </div>
-                <div class="summary-item">
-                    <span>Tax (10%):</span>
-                    <span>$11.70</span>
-                </div>
-                <div class="summary-item">
-                    <span>Shipping:</span>
-                    <span>$5.00</span>
-                </div>
-                
-                <div class="summary-item total">
-                    <span>Total:</span>
-                    <span>$133.68</span>
-                </div>
-
-                <button class="checkout-btn">Proceed to Checkout</button>
-                <button class="continue-shopping-btn">Continue Shopping</button>
-            </div>
-        </div>
+  <nav class="navbar">
+    <div class="navbar__inner">
+      <a href="index.html" class="navbar__brand">
+        <span class="navbar__logo-icon">SOFA</span>
+      </a>
+      <div class="navbar__links">
+        <a href="index.html" class="navbar__link">Menu</a>
+        <a href="track.html" class="navbar__link">Track Order</a>
+        <a href="status.html" class="navbar__link">Staff</a>
+      </div>
+      <div class="nav-right">
+        <div id="nav-auth-slot"></div>
+        <a href="cart.html" class="navbar__cart-btn" aria-label="View cart">
+          <span aria-hidden="true">Cart</span>
+          <span class="cart-badge" id="cart-badge">0</span>
+        </a>
+      </div>
     </div>
+  </nav>
 
-    <script>
-        // Simple event listeners for remove buttons
-        document.querySelectorAll('.remove-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.closest('.cart-item').remove();
-                alert('Item removed from cart');
-            });
-        });
+  <div class="cart-hero"><div class="cart-hero__beans"></div></div>
 
-        // Update total when quantity changes
-        document.querySelectorAll('.item-quantity input').forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('Quantity updated to: ' + this.value);
-                // Call function to update cart totals
-            });
-        });
+  <main class="cart-main">
+    <div class="cart-container">
+      <header class="cart-heading">
+        <h1 class="cart-heading__title">Your Cart</h1>
+        <p class="cart-heading__sub" id="cart-count-label">Loading your cart...</p>
+      </header>
 
-        // Checkout button
-        document.querySelector('.checkout-btn').addEventListener('click', function() {
-            alert('Proceeding to checkout...');
-            // Redirect to checkout page
-        });
+      <div class="cart-layout">
+        <section aria-label="Cart items">
+          <div id="skeleton-list">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
 
-        // Continue shopping button
-        document.querySelector('.continue-shopping-btn').addEventListener('click', function() {
-            window.history.back();
-        });
-    </script>
+          <div class="empty-state" id="empty-state" hidden>
+            <div class="empty-state__icon" aria-hidden="true">SOFA</div>
+            <h2 class="empty-state__title">Your cart is empty</h2>
+            <p class="empty-state__desc">Add something warm, cold, flaky, or sweet from the menu.</p>
+            <a href="index.html" class="btn btn--primary empty-state__cta">Browse menu</a>
+          </div>
+
+          <ul class="cart-items-list" id="cart-items-list" hidden></ul>
+
+          <div class="cart-actions" id="cart-actions" hidden>
+            <button type="button" class="btn btn--ghost btn--sm" id="clear-cart-btn">Clear Cart</button>
+          </div>
+        </section>
+
+        <aside class="order-summary" aria-label="Order summary">
+          <h2 class="order-summary__title">Order Summary</h2>
+          <div class="order-summary__row">
+            <span>Subtotal</span>
+            <strong id="summary-subtotal">EGP 0.00</strong>
+          </div>
+          <div class="order-summary__row order-summary__row--muted">
+            <span>Service tax</span>
+            <span id="summary-tax">EGP 0.00</span>
+          </div>
+          <hr class="order-summary__divider" />
+          <div class="order-summary__row order-summary__row--total">
+            <span>Total</span>
+            <strong id="summary-total">EGP 0.00</strong>
+          </div>
+          <button type="button" class="btn btn--primary btn--full checkout-btn" id="checkout-btn" disabled>
+            Proceed to Checkout
+          </button>
+          <p class="order-summary__note">Final order total is locked by the backend when you place the order.</p>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
 </body>
 </html>

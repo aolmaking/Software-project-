@@ -35,9 +35,10 @@ let debounceMap = {};           // { item_id: timerId }
 /**
  * Centralised fetch wrapper — always returns parsed JSON or throws.
  */
-async function apiFetch(url, options = {}) {
+async function cartApiFetch(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json", ...options.headers },
+    credentials: "include",
     ...options,
   });
   const data = await response.json();
@@ -60,7 +61,7 @@ async function apiFetch(url, options = {}) {
 async function fetchCart() {
   showSkeleton(true);
   try {
-    const data = await apiFetch(API_BASE + "/");
+    const data = await cartApiFetch(API_BASE + "/");
     cartState = data;
     renderCart(cartState);
   } catch (err) {
@@ -80,7 +81,7 @@ async function updateQuantity(itemId, newQty) {
   if (!validateQtyClient(newQty)) return;
 
   try {
-    const data = await apiFetch(`${API_BASE}/${encodeURIComponent(itemId)}`, {
+    const data = await cartApiFetch(`${API_BASE}/${encodeURIComponent(itemId)}`, {
       method: "PATCH",
       body: JSON.stringify({ quantity: newQty }),
     });
@@ -116,7 +117,7 @@ async function removeItem(itemId) {
   await delay(350);
 
   try {
-    const data = await apiFetch(`${API_BASE}/${encodeURIComponent(itemId)}`, {
+    const data = await cartApiFetch(`${API_BASE}/${encodeURIComponent(itemId)}`, {
       method: "DELETE",
     });
 
@@ -137,7 +138,7 @@ async function removeItem(itemId) {
 async function clearCart() {
   if (!confirm("Remove all items from your cart?")) return;
   try {
-    const data = await apiFetch(API_BASE + "/", { method: "DELETE" });
+    const data = await cartApiFetch(API_BASE + "/", { method: "DELETE" });
     cartState = { items: [], subtotal: 0 };
     renderCart(cartState);
     showToast("Cart cleared.", "info");
@@ -321,7 +322,7 @@ function attachListeners() {
 
   // Checkout (placeholder — integrate with checkout module)
   elCheckoutBtn.addEventListener("click", () => {
-    showToast("Checkout coming soon!", "info");
+    window.location.href = "checkout.html";
   });
 }
 
@@ -502,18 +503,3 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-// ─────────────────────────────────────────
-// Exports (for testing environments)
-// ─────────────────────────────────────────
-export {
-  fetchCart,
-  renderCart,
-  updateQuantity,
-  removeItem,
-  clearCart,
-  showToast,
-  renderEmptyState,
-  validateQtyClient,
-  fmt,
-};

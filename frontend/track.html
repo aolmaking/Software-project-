@@ -17,9 +17,18 @@
         <header class="dashboard-header">
             <div class="header-titles">
                 <h1>Order Tracking</h1>
-                <p>Track the status of your orders in real time.</p>
+                <p>Enter your order ID to see the latest status.</p>
             </div>
         </header>
+
+        <form id="track-form" class="track-form" autocomplete="off">
+            <label for="order-id-input">Order ID</label>
+            <div class="track-form-row">
+                <input id="order-id-input" type="text" placeholder="Paste your UUID order ID" required>
+                <button type="submit">Track</button>
+            </div>
+            <p id="track-message" class="track-message" role="status" aria-live="polite"></p>
+        </form>
 
         <!-- Orders Container (Rendered by JS) -->
         <main id="orders-container" class="orders-list">

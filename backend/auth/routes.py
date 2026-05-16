@@ -1,24 +1,14 @@
 import re
 import uuid
-import datetime
-import jwt
 import sqlite3
-import os
 from functools import wraps
 from flask import Blueprint, request, jsonify, current_app, g
 from werkzeug.security import generate_password_hash, check_password_hash
 
-auth_bp = Blueprint('auth', __name__)
+from backend.auth.tokens import TokenError, TokenExpired, create_token, decode_token
+from backend.database import get_db
 
-def get_db():
-    """Establishes an isolated SQLite connection tailored to work alongside the custom database.py."""
-    if 'db' not in g:
-        # Dynamically resolve root Database.db to ensure testing and execution succeed anywhere
-        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Database.db')
-        g.db = sqlite3.connect(db_path)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute('PRAGMA foreign_keys = ON')
-    return g.db
+auth_bp = Blueprint('auth', __name__)
 
 def require_auth(f):
     @wraps(f)
@@ -29,15 +19,15 @@ def require_auth(f):
         
         token = auth_header.split(' ')[1]
         try:
-            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            payload = decode_token(token, current_app.config['SECRET_KEY'])
             db = get_db()
             user = db.execute('SELECT * FROM customers WHERE customer_public_id = ?', (payload['customer_id'],)).fetchone()
             if not user:
                 return jsonify({"error": "User not found", "code": "UNAUTHORIZED"}), 401
             g.user = user
-        except jwt.ExpiredSignatureError:
+        except TokenExpired:
             return jsonify({"error": "Token has expired", "code": "TOKEN_EXPIRED"}), 401
-        except jwt.InvalidTokenError:
+        except (KeyError, TokenError):
             return jsonify({"error": "Invalid token", "code": "INVALID_TOKEN"}), 401
             
         return f(*args, **kwargs)
@@ -100,7 +90,7 @@ def login():
     remember_me = data.get('remember_me', False)
     
     if not email or not password or len(email) > 255 or len(password) > 128:
-        return jsonify({"error": "Email and password are required and must be valid length", "code": "VALIDATION_ERROR"}), 400
+        return jsonify({"error": "Invalid email or password.", "code": "INVALID_CREDENTIALS"}), 401
 
     db = get_db()
     # Case insensitive email search to prevent duplicate bypassing
@@ -108,22 +98,27 @@ def login():
     
     # Generic error message to prevent account enumeration
     if user is None or not check_password_hash(user['password_hash'], password):
-        return jsonify({"error": "Invalid email or password", "code": "INVALID_CREDENTIALS"}), 401
+        return jsonify({"error": "Invalid email or password.", "code": "INVALID_CREDENTIALS"}), 401
 
     if remember_me:
         exp_days = current_app.config.get('JWT_REMEMBER_ME_DAYS', 7)
-        exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=exp_days)
+        expires_in_seconds = int(exp_days) * 24 * 60 * 60
     else:
         exp_hours = current_app.config.get('JWT_EXPIRATION_HOURS', 24)
-        exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=exp_hours)
+        expires_in_seconds = int(exp_hours) * 60 * 60
 
-    token = jwt.encode({
-        'customer_id': user['customer_public_id'],
-        'exp': exp,
-        'iat': datetime.datetime.now(datetime.timezone.utc)
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
+    token = create_token(
+        user['customer_public_id'],
+        current_app.config['SECRET_KEY'],
+        expires_in_seconds,
+    )
 
     return jsonify({"token": token}), 200
+
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    return jsonify({"message": "Logout successful"}), 200
 
 @auth_bp.route('/me', methods=['GET'])
 @require_auth

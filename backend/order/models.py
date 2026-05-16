@@ -10,8 +10,9 @@ import uuid
 from dataclasses import dataclass
 
 
-# Regex from contract (F-ORD-06, EC-03) — matches Unicode letters, spaces, apostrophes, hyphens, dots
-NAME_PATTERN = re.compile(r"^[\w\s'\-.]{1,60}$", re.UNICODE)
+# Regex from contract (F-ORD-06, EC-03): Unicode letters, spaces,
+# apostrophes, hyphens, and dots only.
+NAME_PATTERN = re.compile(r"^(?:[^\W\d_]|\s|'|-|\.){1,60}$", re.UNICODE)
 
 
 @dataclass

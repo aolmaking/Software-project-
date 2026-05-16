@@ -9,7 +9,18 @@
  * Loaded BEFORE any feature-specific JS in every HTML page.
  */
 
-const BASE_URL = 'http://127.0.0.1:5000/api';
+const BASE_URL = window.location.protocol.startsWith('http')
+  ? `${window.location.origin}/api`
+  : 'http://127.0.0.1:5000/api';
+
+function getStoredAuthToken() {
+  return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+function clearStoredAuthToken() {
+  localStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_token');
+}
 
 /**
  * Core fetch wrapper.
@@ -20,7 +31,7 @@ const BASE_URL = 'http://127.0.0.1:5000/api';
  * @throws {{ status, message }} on non-2xx responses
  */
 async function apiFetch(endpoint, options = {}) {
-  const token = localStorage.getItem('sofa_token');
+  const token = getStoredAuthToken();
 
   const headers = {
     'Content-Type': 'application/json',
@@ -36,7 +47,7 @@ async function apiFetch(endpoint, options = {}) {
 
   // Redirect to login for protected routes
   if (response.status === 401) {
-    const onProtectedPage = ['/history.html', '/status.html'].some(
+    const onProtectedPage = ['/checkout.html'].some(
       (p) => window.location.pathname.includes(p)
     );
     if (onProtectedPage) {
@@ -58,6 +69,54 @@ async function apiFetch(endpoint, options = {}) {
   if (response.status === 204) return null;
 
   return response.json();
+}
+
+async function refreshNavbarAuth() {
+  const slot = document.getElementById('nav-auth-slot');
+  if (!slot) return;
+
+  const token = getStoredAuthToken();
+  if (!token) {
+    slot.innerHTML = `
+      <a href="login.html" class="nav-btn">Login</a>
+      <a href="register.html" class="nav-btn">Register</a>
+    `;
+    return;
+  }
+
+  try {
+    const me = await apiFetch('/auth/me');
+    slot.innerHTML = `
+      <span class="nav-username">${escapeSharedHtml(me.full_name || me.username || 'Account')}</span>
+      <button type="button" class="nav-btn" id="nav-logout-btn">Logout</button>
+    `;
+    document.getElementById('nav-logout-btn')?.addEventListener('click', logoutUser);
+  } catch (_) {
+    clearStoredAuthToken();
+    slot.innerHTML = `
+      <a href="login.html" class="nav-btn">Login</a>
+      <a href="register.html" class="nav-btn">Register</a>
+    `;
+  }
+}
+
+async function logoutUser() {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST' });
+  } catch (_) {
+    // Token cleanup is client-owned, so logout can still complete offline.
+  }
+  clearStoredAuthToken();
+  window.location.href = 'login.html';
+}
+
+function escapeSharedHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -89,4 +148,7 @@ function showToast(message, durationMs = 2400) {
 }
 
 // Initialise cart badge on every page load
-document.addEventListener('DOMContentLoaded', refreshCartBadge);
+document.addEventListener('DOMContentLoaded', () => {
+  refreshCartBadge();
+  refreshNavbarAuth();
+});

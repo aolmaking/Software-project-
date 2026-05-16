@@ -63,6 +63,56 @@ body {
     gap: 16px;
 }
 
+.track-form {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 18px;
+}
+
+.track-form label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.track-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.track-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font: inherit;
+}
+
+.track-form button {
+    border: none;
+    border-radius: 8px;
+    padding: 0 18px;
+    background: var(--accent-color);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.track-message {
+    min-height: 20px;
+    margin-top: 10px;
+    color: var(--secondary-text);
+    font-size: 0.9rem;
+}
+
+.track-message.error {
+    color: #c0392b;
+}
+
 /* Order Card */
 .order-card {
     background: var(--card-bg);
@@ -196,6 +246,22 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+.progress-shell {
+    width: 100%;
+    height: 8px;
+    background: var(--disabled-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4caf50;
+    border-radius: inherit;
+    transition: width 0.3s ease;
+}
+
 .timeline-steps {
     display: flex;
     align-items: flex-start;
@@ -264,6 +330,13 @@ body {
     font-weight: 600;
     color: var(--disabled-text);
     transition: color 0.3s ease;
+}
+
+.step-time {
+    margin-top: 4px;
+    color: var(--secondary-text);
+    font-size: 0.7rem;
+    line-height: 1.25;
 }
 
 .timeline-step.completed .step-name {

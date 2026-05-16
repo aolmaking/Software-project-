@@ -1,5 +1,9 @@
 // auth.js
 
+const AUTH_API_BASE = window.location.protocol.startsWith('http')
+    ? `${window.location.origin}/api/auth`
+    : 'http://localhost:5000/api/auth';
+
 // --- 1. Token Priority Logic & Abstraction ---
 function getAuthToken() {
     const sessionToken = sessionStorage.getItem('auth_token');
@@ -15,11 +19,7 @@ function getAuthToken() {
 
 function setAuthToken(token, rememberMe = false) {
     clearAuthToken(); // clear any stale tokens first
-    if (rememberMe) {
-        localStorage.setItem('auth_token', token);
-    } else {
-        sessionStorage.setItem('auth_token', token);
-    }
+    localStorage.setItem('auth_token', token);
 }
 
 function clearAuthToken() {
@@ -29,7 +29,7 @@ function clearAuthToken() {
 
 // --- 2. Protection & Routing ---
 function enforceAuth() {
-    const protectedRoutes = ['history.html', 'track.html']; // Expand as needed
+    const protectedRoutes = ['checkout.html'];
     const isProtected = protectedRoutes.some(route => window.location.pathname.endsWith(route));
     if (isProtected && !getAuthToken()) {
         window.location.replace('login.html');
@@ -141,7 +141,7 @@ if (loginForm) {
         toggleButtonLoading(submitBtn, true); // Double-submit prevention
 
         try {
-            const response = await fetchWithTimeout('http://localhost:5000/api/auth/login', {
+            const response = await fetchWithTimeout(`${AUTH_API_BASE}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, remember_me: rememberMe })
@@ -171,6 +171,7 @@ if (registerForm) {
         clearErrors();
         
         // Whitespace Sanitization
+        const fullName = document.getElementById('fullName')?.value.trim() || '';
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
@@ -178,6 +179,10 @@ if (registerForm) {
 
         let hasError = false;
 
+        if (fullName.length < 1 || fullName.length > 80) {
+            showError('fullNameError', "Full name is required.");
+            hasError = true;
+        }
         if (username.length < 3 || username.length > 30) {
             showError('usernameError', "Username must be 3-30 characters.");
             hasError = true;
@@ -205,11 +210,10 @@ if (registerForm) {
 
         let response;
         try {
-            response = await fetchWithTimeout('http://localhost:5000/api/auth/register', {
+            response = await fetchWithTimeout(`${AUTH_API_BASE}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Map username -> full_name implicitly to respect schema
-                body: JSON.stringify({ username, email, password, full_name: username })
+                body: JSON.stringify({ full_name: fullName, username, email, password })
             });
 
             const data = await response.json();
@@ -232,26 +236,27 @@ if (registerForm) {
 
 // --- 7. Navbar Integration (Logout) ---
 window.updateNavbar = function() {
-    const navLinks = document.getElementById('navAuthLinks');
+    const navLinks = document.getElementById('nav-auth-slot') || document.getElementById('navAuthLinks');
     if (!navLinks) return;
 
     if (getAuthToken()) {
         navLinks.innerHTML = `
-            <a href="track.html">Track Order</a>
-            <button onclick="logout()" class="btn-logout">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                Logout
-            </button>
+            <button onclick="logout()" class="nav-btn">Logout</button>
         `;
     } else {
         navLinks.innerHTML = `
-            <a href="login.html">Sign In</a>
-            <a href="register.html">Sign Up</a>
+            <a href="login.html" class="nav-btn">Login</a>
+            <a href="register.html" class="nav-btn">Register</a>
         `;
     }
 };
 
-window.logout = function() {
+window.logout = async function() {
+    try {
+        await fetchWithTimeout(`${AUTH_API_BASE}/logout`, { method: 'POST' });
+    } catch (_) {
+        // Client-side token cleanup is enough to end the local session.
+    }
     clearAuthToken();
     if (typeof window.updateNavbar === 'function') window.updateNavbar();
     window.location.replace('login.html'); // Destroy history

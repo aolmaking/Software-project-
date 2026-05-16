@@ -5,28 +5,14 @@ Implements POST /api/order per contracts/order.yaml.
 Requirements: F-ORD-01 through F-ORD-06, NF-01, NF-05, EC-01, EC-02, EC-03.
 """
 
-import os
-import sqlite3
-import jwt
-from flask import Blueprint, request, jsonify, g, current_app
+from flask import Blueprint, request, jsonify, current_app
+
+from backend.auth.tokens import TokenError, TokenExpired, decode_token
+from backend.database import get_db
 
 from .models import PlaceOrderRequest, PlaceOrderResponse, generate_order_id
 
 order_bp = Blueprint("order", __name__)
-
-
-# ---------------------------------------------------------------------------
-# DB helper — mirrors the pattern used in auth/routes.py
-# ---------------------------------------------------------------------------
-
-def get_db() -> sqlite3.Connection:
-    """Return (or create) the per-request SQLite connection stored on Flask g."""
-    if "db" not in g:
-        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Database.db")
-        g.db = sqlite3.connect(db_path)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
-    return g.db
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +31,7 @@ def _get_authenticated_customer(db):
 
     token = auth_header.split(" ")[1]
     try:
-        payload = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+        payload = decode_token(token, current_app.config["SECRET_KEY"])
         customer_id = payload.get("customer_id")
         if not customer_id:
             return None, (jsonify({"error": "Invalid token payload", "code": "UNAUTHORIZED"}), 401)
@@ -60,9 +46,9 @@ def _get_authenticated_customer(db):
 
         return user["customer_public_id"], None
 
-    except jwt.ExpiredSignatureError:
+    except TokenExpired:
         return None, (jsonify({"error": "Token has expired", "code": "TOKEN_EXPIRED"}), 401)
-    except jwt.InvalidTokenError:
+    except TokenError:
         return None, (jsonify({"error": "Invalid token", "code": "INVALID_TOKEN"}), 401)
 
 
@@ -234,17 +220,26 @@ def place_order():
             ],
         )
 
-        # H. Clear cart for this session (F-ORD-02)
+        # H. Seed the tracking timeline with the initial pending event
+        db.execute(
+            """
+            INSERT INTO tracking_events (order_public_id, status)
+            VALUES (?, 'pending')
+            """,
+            (order_public_id,),
+        )
+
+        # I. Clear cart for this session (F-ORD-02)
         db.execute(
             "DELETE FROM cart_items WHERE session_id = ?",
             (session_id,),
         )
 
-        # I. Commit
-        db.execute("COMMIT")
+        # J. Commit
+        db.commit()
 
     except Exception:
-        db.execute("ROLLBACK")
+        db.rollback()
         raise
 
     # ------------------------------------------------------------------

@@ -5,7 +5,9 @@
 // Requirements: F-ORD-01 through F-ORD-06, EC-01, EC-03, EC-06.
 // =====================================================================
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = window.location.protocol.startsWith("http")
+    ? window.location.origin
+    : "http://localhost:5000";
 
 // ── Contract-defined regex for customer_name (F-ORD-06, EC-03) ──
 // Only Unicode letters, spaces, apostrophes, hyphens, and dots. 1–60 chars.
@@ -164,9 +166,18 @@ function escapeHtml(text) {
 // =====================================================================
 
 async function placeOrder(customerName) {
+    const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+    if (!token) {
+        window.location.replace("login.html");
+        return { success: false, message: "Please sign in before placing an order." };
+    }
+
     const resp = await fetchWithTimeout(`${API_BASE}/api/order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
         credentials: "include",
         body: JSON.stringify({ customer_name: customerName }),
     });
@@ -176,6 +187,13 @@ async function placeOrder(customerName) {
     if (resp.ok) {
         // resp.status is 201 (new order) or 200 (idempotent hit)
         return { success: true, data };
+    }
+
+    if (resp.status === 401) {
+        localStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_token");
+        window.location.replace("login.html");
+        return { success: false, message: "Please sign in again." };
     }
 
     // Map contract error codes to user-friendly messages

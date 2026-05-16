@@ -1,1 +1,150 @@
-<!-- frontend/checkout.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - De Sofa</title>
+    <meta name="description" content="Complete your order at De Sofa. Review your cart and place your order.">
+    <link rel="stylesheet" href="css/order.css">
+    <script>
+        // Redirect to login if not authenticated
+        const _token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        if (!_token) {
+            window.location.replace('login.html');
+        }
+    </script>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+            <line x1="6" y1="2" x2="6" y2="4"></line>
+            <line x1="10" y1="2" x2="10" y2="4"></line>
+            <line x1="14" y1="2" x2="14" y2="4"></line>
+        </svg>
+        De Sofa
+    </a>
+    <div class="navbar-links">
+        <a href="index.html">Menu</a>
+        <a href="cart.html">Cart</a>
+        <a href="track.html">Track Order</a>
+    </div>
+</nav>
+
+<!-- ── Page Content ── -->
+<main class="checkout-page">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Checkout</h1>
+        <p>Review your order and confirm to place it.</p>
+    </div>
+
+    <!-- Two-Column Layout -->
+    <div class="checkout-layout">
+
+        <!-- Left: Order Summary -->
+        <section class="summary-card" id="summaryCard">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                Order Summary
+            </h2>
+            <!-- JS will populate this -->
+            <div id="summaryItems" class="summary-items">
+                <div class="empty-cart-message" id="emptyCartMsg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <p>Your cart is empty.</p>
+                    <a href="index.html">Browse the menu →</a>
+                </div>
+            </div>
+            <div class="summary-divider" id="summaryDivider" style="display:none;"></div>
+            <div class="summary-total" id="summaryTotal" style="display:none;">
+                <span>Total</span>
+                <span id="totalAmount">EGP 0.00</span>
+            </div>
+        </section>
+
+        <!-- Right: Checkout Form -->
+        <section class="checkout-card">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Your Details
+            </h2>
+
+            <div id="globalMessage" class="global-message"></div>
+
+            <form id="checkoutForm" novalidate>
+                <div class="form-group">
+                    <label for="customerName">Your Name</label>
+                    <div class="input-wrapper">
+                        <svg class="icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <input
+                            type="text"
+                            id="customerName"
+                            class="form-control"
+                            placeholder="e.g. Ahmed Hassan"
+                            required
+                            maxlength="60"
+                            autocomplete="name"
+                        >
+                    </div>
+                    <div class="form-hint">Letters, spaces, hyphens, dots, and apostrophes only (1–60 chars).</div>
+                    <div class="error-text" id="customerNameError"></div>
+                </div>
+
+                <button type="submit" id="placeOrderBtn" class="btn-primary" disabled>
+                    <span class="btn-text">Place Order</span>
+                    <span class="spinner"></span>
+                </button>
+            </form>
+
+            <a href="cart.html" class="back-link">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to cart
+            </a>
+        </section>
+
+    </div>
+</main>
+
+<!-- ── Success Overlay ── -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-modal">
+        <div class="check-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2>Order Placed!</h2>
+        <p>Your coffee is being prepared with care.</p>
+        <div class="order-id-display" id="successOrderId"></div>
+        <button class="btn-primary" id="trackOrderBtn">
+            <span class="btn-text">Track My Order</span>
+        </button>
+    </div>
+</div>
+
+<script src="js/order.js"></script>
+</body>
+</html>

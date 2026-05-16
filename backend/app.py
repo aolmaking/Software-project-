@@ -1,5 +1,9 @@
-from flask import Flask, g
-from flask_cors import CORS
+# backend/app.py
+from flask import Flask, jsonify, g
+from tracking.routes import tracking_bp
+from auth.routes import auth_bp
+from order.routes import order_bp
+from config import Config
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -39,12 +43,21 @@ def create_app():
         if db is not None:
             db.close()
 
-    @app.after_request
-    def after_request(response):
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
-        return response
+# Apply rate limiting specifically to auth endpoints
+limiter.limit("5 per minute")(auth_bp)
+
+# Register Blueprints
+app.register_blueprint(tracking_bp, url_prefix='/api/track')
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
+app.register_blueprint(order_bp, url_prefix='/api/order')
+
+# Secure CORS handling
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
     @app.cli.command("init-db")
     def init_db_command():

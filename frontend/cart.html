@@ -8,23 +8,22 @@
   <link rel="stylesheet" href="css/cart.css?v=sofa-brown" />
 </head>
 <body>
-  <nav class="navbar">
-    <div class="navbar__inner">
-      <a href="index.html" class="navbar__brand">
-        <span class="navbar__logo-icon">SOFA</span>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      S O F A
+      <span class="nav-tagline">Coffee & Bakery</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Menu</a></li>
+      <li><a href="track.html" class="nav-link">Track order</a></li>
+      <li><a href="history.html" class="nav-link">History</a></li>
+    </ul>
+    <div class="nav-right">
+      <div id="nav-auth-slot"></div>
+      <a href="cart.html" class="nav-btn primary active" id="nav-cart-btn" aria-label="View cart">
+        Cart <span class="cart-badge" id="cart-badge">0</span>
       </a>
-      <div class="navbar__links">
-        <a href="index.html" class="navbar__link">Menu</a>
-        <a href="track.html" class="navbar__link">Track Order</a>
-        <a href="history.html" class="navbar__link">History</a>
-      </div>
-      <div class="nav-right">
-        <div id="nav-auth-slot"></div>
-        <a href="cart.html" class="navbar__cart-btn" aria-label="View cart">
-          <span aria-hidden="true">Cart</span>
-          <span class="cart-badge" id="cart-badge">0</span>
-        </a>
-      </div>
     </div>
   </nav>
 
@@ -33,7 +32,6 @@
   <main class="cart-main">
     <div class="cart-container">
       <header class="cart-heading">
-        <h1 class="cart-heading__title">Your Cart</h1>
         <p class="cart-heading__sub" id="cart-count-label">Loading your cart...</p>
       </header>
 
@@ -46,7 +44,6 @@
 
           <div class="empty-state" id="empty-state" hidden>
             <div class="empty-state__icon" aria-hidden="true">SOFA</div>
-            <h2 class="empty-state__title">Your cart is empty</h2>
             <p class="empty-state__desc">Add something warm, cold, flaky, or sweet from the menu.</p>
             <a href="index.html" class="btn btn--primary empty-state__cta">Browse menu</a>
           </div>

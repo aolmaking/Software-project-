@@ -1,92 +1,126 @@
-/* history.css */
+/* history.css - Redesigned history UI using Sofa theme */
+
 .dashboard-container {
     width: 100%;
     max-width: 800px;
-    margin: 40px auto;
-    padding: 0 20px;
+    margin: 60px auto;
+    padding: 0 5vw;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 40px;
+    animation: fadeIn 0.8s var(--transition) both;
 }
 
-/* History Card - Receipt Style */
+.dashboard-container > h1 {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    color: var(--brown-dark);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.dashboard-container > p.subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    margin-bottom: 20px;
+}
+
+/* History Card - Premium Receipt Style */
 .history-card {
     background: var(--warm-white);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0,0,0,0.06);
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     position: relative;
     padding: 0;
+    transition: all var(--transition);
 }
 
-/* Receipt jagged edge effect */
+/* Receipt jagged edge effect - softened */
 .history-card::before, .history-card::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    height: 10px;
-    background-size: 20px 20px;
+    height: 12px;
+    background-size: 24px 24px;
     z-index: 10;
+    opacity: 0.7;
 }
+
 .history-card::before {
-    top: -5px;
-    background-image: radial-gradient(circle at 10px 0, transparent 10px, var(--warm-white) 11px);
+    top: -6px;
+    background-image: radial-gradient(circle at 12px 0, transparent 12px, var(--warm-white) 13px);
 }
+
 .history-card::after {
-    bottom: -5px;
-    background-image: radial-gradient(circle at 10px 20px, transparent 10px, var(--warm-white) 11px);
+    bottom: -6px;
+    background-image: radial-gradient(circle at 12px 24px, transparent 12px, var(--warm-white) 13px);
 }
 
 .history-card:hover, .history-card.expanded {
-    box-shadow: 0 8px 24px rgba(74, 51, 32, 0.1);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: rgba(212, 175, 55, 0.3);
 }
 
 .card-main {
     display: flex;
     align-items: center;
-    padding: 24px;
-    gap: 20px;
+    padding: 32px 36px;
+    gap: 24px;
     cursor: pointer;
     user-select: none;
-    border-bottom: 1px dashed var(--border);
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    background: transparent;
 }
 
 .order-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .order-id {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    font-family: monospace;
+    font-family: var(--font-serif);
     color: var(--brown-dark);
+    letter-spacing: 0.05em;
 }
 
 .completed-date {
     font-size: 0.85rem;
     color: var(--text-muted);
+    font-family: var(--font-sans);
+}
+
+.card-main .price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--brown-dark);
 }
 
 .toggle-icon {
-    color: var(--text-muted);
-    transition: transform 0.3s ease;
-    padding: 4px;
+    color: var(--text-light);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s;
+    padding: 8px;
+    font-size: 1.2rem;
 }
 
 .history-card.expanded .toggle-icon {
     transform: rotate(180deg);
+    color: var(--gold);
 }
 
 .card-details {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .history-card.expanded .card-details {
@@ -95,14 +129,14 @@
 
 .card-details-inner {
     overflow: hidden;
-    background: #fafafa;
+    background: rgba(250, 246, 241, 0.5); /* ultra soft cream */
 }
 
 .receipt-body {
-    padding: 24px;
+    padding: 32px 36px 40px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
 .receipt-items {
@@ -111,53 +145,98 @@
 }
 
 .receipt-items th, .receipt-items td {
-    padding: 8px 0;
-    border-bottom: 1px solid #eaeaea;
-    font-size: 0.9rem;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    font-size: 0.95rem;
+    font-family: var(--font-sans);
 }
 
 .receipt-items th {
     text-align: left;
     color: var(--text-muted);
-    font-weight: normal;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .receipt-items td.price {
     text-align: right;
+    font-weight: 600;
+    color: var(--brown-dark);
+}
+
+.receipt-items td {
+    color: var(--brown-mid);
 }
 
 .receipt-total {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-weight: 700;
-    font-size: 1.1rem;
-    padding-top: 10px;
-    border-top: 2px dashed var(--border);
+    font-size: 1.25rem;
+    padding-top: 16px;
+    border-top: 2px dashed rgba(212, 175, 55, 0.4);
+    color: var(--brown-dark);
 }
 
 .timeline-mini {
     display: flex;
-    gap: 10px;
-    font-size: 0.8rem;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    margin-top: 10px;
+    margin-top: 8px;
+    padding: 16px;
+    background: rgba(255,255,255,0.6);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(0,0,0,0.04);
 }
 
 .reorder-btn {
     background: var(--gold);
-    color: var(--brown-dark);
+    color: var(--warm-white);
     font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     border: none;
-    padding: 10px 20px;
-    border-radius: var(--radius-sm);
+    padding: 14px 24px;
+    border-radius: var(--radius-pill);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
     text-align: center;
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 16px;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .reorder-btn:hover {
-    background: var(--gold-light);
+    background: var(--brown-dark);
+    box-shadow: 0 6px 16px rgba(44, 26, 18, 0.2);
+    transform: translateY(-2px);
+}
+
+.reorder-btn:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 600px) {
+    .dashboard-container {
+        padding: 0 16px;
+    }
+    
+    .card-main {
+        padding: 24px;
+        flex-wrap: wrap;
+    }
+    
+    .receipt-body {
+        padding: 24px;
+    }
 }

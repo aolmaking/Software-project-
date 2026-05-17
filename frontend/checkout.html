@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Sofa</title>
     <meta name="description" content="Complete your order at Sofa. Review your cart and place your order.">
-    <link rel="stylesheet" href="css/order.css">
+    <link rel="stylesheet" href="css/shared.css?v=sofa-brown">
+    <link rel="stylesheet" href="css/order.css?v=sofa-brown">
     <script>
         // Redirect to login if not authenticated
         const _token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
@@ -16,25 +17,24 @@
 </head>
 <body>
 
-<!-- ── Navbar ── -->
-<nav class="navbar">
-    <a href="index.html" class="navbar-brand">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-            <line x1="6" y1="2" x2="6" y2="4"></line>
-            <line x1="10" y1="2" x2="10" y2="4"></line>
-            <line x1="14" y1="2" x2="14" y2="4"></line>
-        </svg>
-        Sofa
-    </a>
-    <div class="navbar-links">
-        <a href="index.html">Menu</a>
-        <a href="cart.html">Cart</a>
-        <a href="track.html">Track Order</a>
-        <a href="history.html">History</a>
+<!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      S O F A
+      <span class="nav-tagline">Coffee &amp; Bakery</span>
     </div>
-</nav>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Menu</a></li>
+      <li><a href="track.html" class="nav-link">Track order</a></li>
+      <li><a href="history.html" class="nav-link">History</a></li>
+    </ul>
+    <div class="nav-right">
+      <div id="nav-auth-slot"></div>
+      <a href="cart.html" class="nav-btn primary" id="nav-cart-btn" aria-label="View cart">
+        Cart <span class="cart-badge" id="cart-badge">0</span>
+      </a>
+    </div>
+  </nav>
 
 <!-- ── Page Content ── -->
 <main class="checkout-page">
@@ -146,6 +146,6 @@
     </div>
 </div>
 
-<script src="js/order.js"></script>
+<script src="js/order.js?v=sofa-brown"></script>
 </body>
 </html>

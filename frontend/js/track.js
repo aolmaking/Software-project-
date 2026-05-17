@@ -17,9 +17,20 @@ async function fetchActiveOrders() {
         const data = await apiFetch("/track/active");
         if (data && data.orders) {
             renderOrders(data.orders);
+        } else {
+            renderOrders([]);
         }
     } catch (error) {
         showToast(error.message || "Failed to fetch orders");
+        const container = document.getElementById("orders-container");
+        const loadingState = document.getElementById("loading-state");
+        if (container && loadingState) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p style="color: #D32F2F;">Failed to load your orders.</p>
+                    <button onclick="fetchActiveOrders()" class="nav-btn primary" style="margin-top: 15px;">Retry</button>
+                </div>`;
+        }
     }
 }
 
@@ -82,12 +93,12 @@ function renderOrders(orders) {
         `;
     });
     html += '</div>';
-    
+
     // Only update innerHTML if it has meaningfully changed to avoid interrupting animations,
     // or just use a smart diffing approach. Since it's a simple app, we can just replace it,
     // but replacing it breaks CSS transitions for expansion.
     // Instead of replacing the whole container, let's update individual cards.
-    
+
     updateDOM(orders, openCardId);
 }
 
@@ -103,7 +114,7 @@ function updateDOM(orders, openCardId) {
 
     const existingCards = Array.from(listElement.querySelectorAll(".order-card"));
     const existingIds = existingCards.map(c => c.dataset.orderId);
-    
+
     // Remove completed orders with fade out
     existingCards.forEach(card => {
         if (!orders.find(o => o.order_id === card.dataset.orderId)) {
@@ -217,7 +228,7 @@ function statusIcon(status) {
 function titleCase(value) {
     return String(value || "")
         .replace(/_/g, " ")
-        .replace(/\\b\\w/g, (letter) => letter.toUpperCase());
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatTimestamp(value) {

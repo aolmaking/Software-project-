@@ -70,8 +70,34 @@ def create_app(static_folder=None, static_url_path=""):
 
 
 
+import threading
+import time
+
+shutdown_timer = None
+
+def do_shutdown():
+    print("Browser closed. Shutting down server gracefully...")
+    os._exit(0)
+
 app = create_app()
 
+@app.route("/api/connect", methods=["POST"])
+def connect():
+    global shutdown_timer
+    if shutdown_timer is not None:
+        shutdown_timer.cancel()
+        shutdown_timer = None
+    return "", 204
+
+@app.route("/api/disconnect", methods=["POST"])
+def disconnect():
+    global shutdown_timer
+    if shutdown_timer is not None:
+        shutdown_timer.cancel()
+    # 2.5 second grace period to allow for page navigation/refresh
+    shutdown_timer = threading.Timer(2.5, do_shutdown)
+    shutdown_timer.start()
+    return "", 204
 
 if __name__ == "__main__":
     app.run(debug=False, port=5000, use_reloader=False)

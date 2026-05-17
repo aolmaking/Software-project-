@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - Sofa Cafe</title>
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/shared.css?v=sofa-brown">
+    <link rel="stylesheet" href="css/auth.css?v=sofa-brown">
     <script>
         // Check both storages to redirect logged-in users away from the login page
         const _token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
@@ -15,6 +16,26 @@
 </head>
 <body>
 
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      S O F A
+      <span class="nav-tagline">Coffee & Bakery</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Menu</a></li>
+      <li><a href="track.html" class="nav-link">Track order</a></li>
+      <li><a href="history.html" class="nav-link">History</a></li>
+    </ul>
+    <div class="nav-right">
+      <div id="nav-auth-slot"></div>
+      <a href="cart.html" class="nav-btn primary" id="nav-cart-btn" aria-label="View cart">
+        Cart <span class="cart-badge" id="cart-badge">0</span>
+      </a>
+    </div>
+  </nav>
+
+<div class="auth-page-container">
 <div class="auth-wrapper">
     <!-- Left Decorative Panel -->
     <div class="auth-image-panel">
@@ -84,7 +105,9 @@
         </div>
     </div>
 </div>
+</div>
 
-<script src="js/auth.js"></script>
+<script src="js/api.js?v=sofa-brown"></script>
+<script src="js/auth.js?v=sofa-brown"></script>
 </body>
 </html>

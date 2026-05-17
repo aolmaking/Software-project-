@@ -150,4 +150,16 @@ function showToast(message, durationMs = 2400) {
 document.addEventListener('DOMContentLoaded', () => {
   refreshCartBadge();
   refreshNavbarAuth();
+  
+  // Signal server that a page is open (cancels any pending shutdown from navigation)
+  fetch(`${BASE_URL}/connect`, { method: 'POST', keepalive: true }).catch(() => {});
+});
+
+// Signal server when page closes (starts a brief shutdown timer)
+window.addEventListener('pagehide', () => {
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(`${BASE_URL}/disconnect`);
+  } else {
+    fetch(`${BASE_URL}/disconnect`, { method: 'POST', keepalive: true }).catch(() => {});
+  }
 });
